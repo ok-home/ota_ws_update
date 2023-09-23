@@ -12,22 +12,12 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
-#include "esp_http_client.h"
-#include "esp_https_ota.h"
-#include "protocol_examples_common.h"
-#include "string.h"
-
-#include "nvs.h"
-#include "nvs_flash.h"
 #include "esp_wifi.h"
 
 //#include <esp_log.h>
 
 #include "prv_wifi_connect.h"
 static const char *TAG = "ota_ws";
-
-void example_echo_ws_server(void);
-esp_err_t example_register_uri_handler(httpd_handle_t server);
 
 #define MDNS
 #ifdef MDNS
@@ -62,6 +52,6 @@ void app_main(void)
     netbiosns_set_name("esp");
 #endif // MDNS
 
-    prv_start_http_server(PRV_MODE_STAY_ACTIVE,example_register_uri_handler); // run server
+    prv_start_http_server(PRV_MODE_STAY_ACTIVE,NULL); // run server
     //example_echo_ws_server();
 }
