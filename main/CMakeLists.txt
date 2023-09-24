@@ -2,9 +2,19 @@
 
 idf_component_register(
                     SRCS 
-                      example_ota_ws.c 
+                      example_ota_ws.c
+                      ../source/ota_ws_esp.c
+                      ../source/ota_ws_http.c 
                     INCLUDE_DIRS 
-                        "."
-                    #EMBED_FILES 
-                        ota_ws.html
+                      ../include
+                    PRIV_INCLUDE_DIRS
+                      ../private_include
+                    REQUIRES
+                      prv_Wifi_Connect
+                      esp_http_server
+                      mdns
+                      app_update
+                      esp_wifi
+                    EMBED_FILES 
+                      ../source/ota_ws.html
 )

@@ -37,24 +37,29 @@ static esp_err_t json_to_str_parm(char *jsonstr, char *nameStr, char *valStr) //
         valStr[0] = 0;
     return ESP_OK;
 }
-static void send_json_string(char *str, httpd_req_t *req)
+static esp_err_t send_json_string(char *str, httpd_req_t *req)
 {
     httpd_ws_frame_t ws_pkt;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
     ws_pkt.type = HTTPD_WS_TYPE_TEXT;
     ws_pkt.payload = (uint8_t *)str;
     ws_pkt.len = strlen(str);
-    httpd_ws_send_frame(req, &ws_pkt);
+    return httpd_ws_send_frame(req, &ws_pkt);
 }
-// write wifi data from ws to nvs
 static esp_err_t ota_ws_handler(httpd_req_t *req)
 {
+    static int ota_size;
+    static int ota_start_chunk;
+
     if (req->method == HTTP_GET)
     {
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
-        send_nvs_data(req); // read & send initial wifi data from nvs
         return ESP_OK;
     }
+    char json_key[64]={0};
+    char json_value[64]={0};
+    char json_str[64] = {0};
+
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
@@ -87,11 +92,41 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
     ret = ESP_OK;
     if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
     {
-        // json data
+        ESP_LOGI(TAG, "Rcv txt msg len=%d data=%s", ws_pkt.len, buf);
+        if (json_to_str_parm((char*)buf,json_key,json_value))
+        {
+            ESP_LOGE(TAG,"error json str: %s",buf);
+            goto _recv_ret;
+        }
+        if(strcmp(json_key,OTA_SIZE_START)==0)// start ota
+        {
+            ota_size = atoi(json_value);
+            ota_start_chunk = 0;
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_SET_CHUNK_SIZE, OTA_CHUNK_SIZE);
+            send_json_string(json_str,req);
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_GET_CHUNK, ota_start_chunk);
+            send_json_string(json_str,req);
+        }
+
     }
-    else if (ws_pkt.type == HTTPD_WS_TYPE_BIN)
+    else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY)
     {
-        // ota data
+        ESP_LOGI(TAG, "Rcv bin msg len=%d", ws_pkt.len);
+        ota_start_chunk += ws_pkt.len;
+        if(ota_start_chunk < ota_size)
+        {
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\": %d }", OTA_GET_CHUNK, ota_start_chunk);
+            send_json_string(json_str,req);
+
+        }
+        else{
+// end ota
+            ota_size = 0;
+            ota_start_chunk = 0;
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\" }", OTA_END, "OK");
+            send_json_string(json_str,req);
+
+        }
     }
     else
     {

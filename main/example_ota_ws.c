@@ -14,44 +14,45 @@
 #include "esp_ota_ops.h"
 #include "esp_wifi.h"
 
-//#include <esp_log.h>
+// #include <esp_log.h>
 
 #include "prv_wifi_connect.h"
+#include "ota_ws.h"
+
 static const char *TAG = "ota_ws";
 
 #define MDNS
 #ifdef MDNS
+#define HOST_NAME "esp-ota"
 #include "mdns.h"
 #include "lwip/apps/netbiosns.h"
-#endif //MDNS
+#endif // MDNS
 #ifdef MDNS
 static void initialise_mdns(void)
 {
     mdns_init();
-    mdns_hostname_set("esp");
+    mdns_hostname_set(HOST_NAME);
     mdns_instance_name_set("esp home web server");
 
     mdns_txt_item_t serviceTxtData[] = {
         {"board", "esp32"},
-        {"path", "/"}
-    };
+        {"path", "/"}};
 
     ESP_ERROR_CHECK(mdns_service_add("ESP32-WebServer", "_http", "_tcp", 80, serviceTxtData,
                                      sizeof(serviceTxtData) / sizeof(serviceTxtData[0])));
+    netbiosns_init();
+    netbiosns_set_name(HOST_NAME);
 }
 #endif // MDNS
 
-
 void app_main(void)
 {
-    prv_wifi_connect();                     // return with error ?
+    prv_wifi_connect(); // return with error ?
 
 #ifdef MDNS
     initialise_mdns();
-    netbiosns_init();
-    netbiosns_set_name("esp");
 #endif // MDNS
 
-    prv_start_http_server(PRV_MODE_STAY_ACTIVE,NULL); // run server
-    //example_echo_ws_server();
+    prv_start_http_server(PRV_MODE_STAY_ACTIVE, ota_ws_register_uri_handler); // run server
+    // example_echo_ws_server();
 }

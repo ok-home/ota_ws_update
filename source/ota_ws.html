@@ -92,7 +92,7 @@
     <script>
         
         let otaData;
-        let otaSetchunksSize = 0;
+        let otaSetChunkSize = 0;
         let otaStartsegment = 0;
         let otaStarted = 0;
 
@@ -121,19 +121,20 @@
         document.getElementById("otaStartCancel").addEventListener("click", function (e) {
             if (otaData.length > 0 && otaStarted == 0) {
 
-                //socket.send(JSON.stringify({ name: "otasize", msg: otaData.length }));
-                console.log(JSON.stringify({ name: "otasize", msg: otaData.length }));
+                socket.send(JSON.stringify({ name: "otaSize", value: otaData.length }));
+                //console.log(JSON.stringify({ name: "otaSize", value: otaData.length }));
                 
                 otaStarted = 1;
                 this.innerHTML = "Click to Cancel";
                 document.getElementById("otaFileSelect").disabled = true;
                 document.getElementById("otaProgressVisible").style.display = "block";
                 document.getElementById("otaPogress").max = otaData.length;
-                tstReceive();
+                //tstReceive();
             }
             else {
                 otaStarted = 0;
-                receiveWsData(JSON.stringify({ name: "otaCancel", msg: "Cancel" }));
+                //receiveWsData(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
+                socket.send(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
             }
 
         });
@@ -143,8 +144,8 @@
             window.location.href = '/';
         });
         document.getElementById("otaReStart").addEventListener("click", function (e) {
-            //socket.send(JSON.stringify({ name: "otarestartesp", msg: "restart" }));
-            console.log(JSON.stringify({ name: "otarestartesp", msg: "restart" }));
+            socket.send(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
+            //console.log(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
         });
 
         //
@@ -152,18 +153,18 @@
             return new Promise(resolve => setTimeout(resolve, ms));
         }
         async function tstReceive() {
-            receiveWsData(JSON.stringify({ name: "otaSetchunksSize", msg: 1024 }));
-            while (otaStartsegment + otaSetchunksSize <= otaData.length && otaStarted == 1) {
+            receiveWsData(JSON.stringify({ name: "otaSetChunkSize", value: 1024 }));
+            while (otaStartsegment + otaSetChunkSize <= otaData.length && otaStarted == 1) {
                 await sleep(1000);
                 if(otaStarted == 1){
-                receiveWsData(JSON.stringify({ name: "otaGetChunk", msg: otaStartsegment }));
+                receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
                 }
-                otaStartsegment += otaSetchunksSize;
+                otaStartsegment += otaSetChunkSize;
             }
-            //console.log(otaStartsegment + " " + otaSetchunksSize + " " + otaData.length + " " + (otaData.length - otaStartsegment));
+            //console.log(otaStartsegment + " " + otaSetChunkSize + " " + otaData.length + " " + (otaData.length - otaStartsegment));
             if (otaStarted == 1) {
-                receiveWsData(JSON.stringify({ name: "otaGetChunk", msg: otaStartsegment }));
-                receiveWsData(JSON.stringify({ name: "otaEnd", msg: "OK" }));
+                receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
+                receiveWsData(JSON.stringify({ name: "otaEnd", value: "OK" }));
             }
         }
         //
@@ -172,15 +173,15 @@
                 let obj = JSON.parse(data);
                 console.log(data);
                 switch (obj.name) {
-                    case "otaSetchunksSize":
-                        otaSetchunksSize = obj.msg;
+                    case "otaSetChunkSize":
+                        otaSetChunkSize = obj.value;
                         break;
                     case "otaGetChunk":
-                        let otaDataSend = otaData.subarray(obj.msg, obj.msg + otaSetchunksSize);
-                        document.getElementById("otaPogress").value = obj.msg;
-                        document.getElementById("otaStartCancel").innerHTML = "Ota Transfer. Size = " + otaData.length + " Segment = " + obj.msg + " Click to Cancel";
-                        console.log("sock send " + obj.msg + " " + otaDataSend.length);
-                        //socket.send(otaDataSend);
+                        let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
+                        document.getElementById("otaPogress").value = obj.value;
+                        document.getElementById("otaStartCancel").innerHTML = "Ota Transfer. Size = " + otaData.length + " Segment = " + obj.value + " Click to Cancel";
+                        console.log("sock send " + obj.value + " " + otaDataSend.length);
+                        socket.send(otaDataSend);
                         break;
                     case "otaEnd":
                         otaStartsegment = 0;
@@ -202,7 +203,7 @@
                         document.getElementById("otaPogress").value = otaData.length;
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStartVisible").style.display = "block";
-                        document.getElementById("otaReStart").innerHTML = "Transfer Cancel " + obj.msg;
+                        document.getElementById("otaReStart").innerHTML = "Transfer Cancel " + obj.value;
                         document.getElementById("otaReStart").disabled = true;
                 }
             }
