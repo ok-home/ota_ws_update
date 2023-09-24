@@ -11,6 +11,25 @@
 
 static const char *TAG = "ota_ws";
 
+static int ota_size;
+static int ota_start_chunk;
+static int ota_started;
+
+static esp_err_t json_to_str_parm(char *jsonstr, char *nameStr, char *valStr);
+static esp_err_t send_json_string(char *str, httpd_req_t *req);
+static esp_err_t ota_ws_handler(httpd_req_t *req);
+static void ota_error(httpd_req_t *req, char *code, char *msg);
+
+static void ota_error(httpd_req_t *req, char *code, char *msg)
+{
+    char json_str[128];
+    ota_size = ota_start_chunk = ota_started = 0;
+    abort_ota_ws();
+    ESP_LOGE(TAG, "%s %s", code, msg);
+    snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\"}", code, msg);
+    send_json_string(json_str, req);
+}
+
 // simple json parse -> only one parametr name/val
 static esp_err_t json_to_str_parm(char *jsonstr, char *nameStr, char *valStr) // распаковать строку json в пару  name/val
 {
@@ -48,27 +67,24 @@ static esp_err_t send_json_string(char *str, httpd_req_t *req)
 }
 static esp_err_t ota_ws_handler(httpd_req_t *req)
 {
-    static int ota_size;
-    static int ota_start_chunk;
 
     if (req->method == HTTP_GET)
     {
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
         return ESP_OK;
     }
-    char json_key[64]={0};
-    char json_value[64]={0};
-    char json_str[64] = {0};
+    char json_key[64] = {0};
+    char json_value[64] = {0};
+    char json_str[128] = {0};
 
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    // ws_pkt.type = HTTPD_WS_TYPE_TEXT;
     /* Set max_len = 0 to get the frame len */
     esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
     if (ret != ESP_OK)
     {
-        ESP_LOGE(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
+        ota_error(req, OTA_ERROR, "httpd_ws_recv_frame failed to get frame len");
         return ret;
     }
     if (ws_pkt.len)
@@ -77,7 +93,7 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
         buf = calloc(1, ws_pkt.len + 1);
         if (buf == NULL)
         {
-            ESP_LOGE(TAG, "Failed to calloc memory for buf");
+            ota_error(req, OTA_ERROR, "Failed to calloc memory for buf");
             return ESP_ERR_NO_MEM;
         }
         ws_pkt.payload = buf;
@@ -85,54 +101,96 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
         ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
         if (ret != ESP_OK)
         {
-            ESP_LOGE(TAG, "httpd_ws_recv_frame failed with %d", ret);
+            ota_error(req, OTA_ERROR, "httpd_ws_recv_frame failed");
             goto _recv_ret;
         }
     }
     ret = ESP_OK;
     if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
     {
-        ESP_LOGI(TAG, "Rcv txt msg len=%d data=%s", ws_pkt.len, buf);
-        if (json_to_str_parm((char*)buf,json_key,json_value))
+        //ESP_LOGI(TAG, "Rcv txt msg len=%d data=%s", ws_pkt.len, buf);
+        if (json_to_str_parm((char *)buf, json_key, json_value))
         {
-            ESP_LOGE(TAG,"error json str: %s",buf);
+            ota_error(req, OTA_ERROR, "Error json str");
             goto _recv_ret;
         }
-        if(strcmp(json_key,OTA_SIZE_START)==0)// start ota
+        if (strncmp(json_key, OTA_SIZE_START, sizeof(OTA_SIZE_START)) == 0) // start ota
         {
             ota_size = atoi(json_value);
+            if (ota_size == 0)
+            {
+                ota_error(req, OTA_ERROR, "Error ota size = 0");
+                goto _recv_ret;
+            }
+            ret = start_ota_ws();
+            if (ret)
+            {
+                ota_error(req, OTA_ERROR, "Error start ota");
+                goto _recv_ret;
+            }
+            ota_started = 1;
             ota_start_chunk = 0;
             snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_SET_CHUNK_SIZE, OTA_CHUNK_SIZE);
-            send_json_string(json_str,req);
+            send_json_string(json_str, req);
             snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_GET_CHUNK, ota_start_chunk);
-            send_json_string(json_str,req);
+            send_json_string(json_str, req);
         }
-
-    }
-    else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY)
-    {
-        ESP_LOGI(TAG, "Rcv bin msg len=%d", ws_pkt.len);
-        ota_start_chunk += ws_pkt.len;
-        if(ota_start_chunk < ota_size)
+        if (strncmp(json_key, OTA_CANCEL, sizeof(OTA_CANCEL)) == 0) // cancel ota
         {
+            ota_error(req, OTA_CANCEL, "Cancel command");
+            ret = ESP_OK;
+            goto _recv_ret;
+        }
+        if (strncmp(json_key, OTA_ERROR, sizeof(OTA_ERROR)) == 0) // error ota
+        {
+            ota_error(req, OTA_ERROR, "Error command");
+            ret = ESP_OK;
+            goto _recv_ret;
+        }
+        if (strncmp(json_key, OTA_RESTART_ESP, sizeof(OTA_RESTART_ESP)) == 0) // cancel ota
+        {
+            esp_restart();
+        }
+    }
+    else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY && ota_started)
+    {
+        //ESP_LOGI(TAG, "Rcv bin msg start=%d len=%d", ota_start_chunk, ws_pkt.len);
+
+        if (ota_start_chunk + ws_pkt.len < ota_size)
+        {
+            ret = write_ota_ws(ws_pkt.len, buf);
+            if (ret)
+            {
+                ota_error(req, OTA_ERROR, "Error write ota");
+                goto _recv_ret;
+            }
+            ota_start_chunk += ws_pkt.len;
             snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\": %d }", OTA_GET_CHUNK, ota_start_chunk);
-            send_json_string(json_str,req);
+            send_json_string(json_str, req);
 
         }
-        else{
-// end ota
+        else
+        {
+            // last chunk and end ota
+            ret = write_ota_ws(ws_pkt.len, buf);
+            if (ret)
+            {
+                ota_error(req, OTA_ERROR, "Error write ota");
+                goto _recv_ret;
+            }
+            ret = end_ota_ws();
+            if (ret)
+            {
+                ota_error(req, OTA_ERROR, "Error end ota");
+                goto _recv_ret;
+            }
             ota_size = 0;
             ota_start_chunk = 0;
+            ota_started = 0;
+            ESP_LOGI(TAG,"OTA END OK");
             snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\" }", OTA_END, "OK");
-            send_json_string(json_str,req);
-
+            send_json_string(json_str, req);
         }
-    }
-    else
-    {
-        ESP_LOGE(TAG, "httpd_ws_recv_frame unknown frame type %d", ws_pkt.type);
-        ret = ESP_FAIL;
-        goto _recv_ret;
     }
 _recv_ret:
     free(buf);

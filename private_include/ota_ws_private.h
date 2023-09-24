@@ -12,8 +12,9 @@
 #define OTA_ERROR "otaError"
 #define OTA_CANCEL "otaCancel"
 
-#define OTA_CHUNK_SIZE 4096
+#define OTA_CHUNK_SIZE 4096*2
 
 esp_err_t start_ota_ws(void);
 esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data);
 esp_err_t end_ota_ws(void);
+esp_err_t abort_ota_ws(void);

@@ -16,7 +16,7 @@ static esp_ota_handle_t update_handle = 0;
 
 esp_err_t start_ota_ws(void)
 {
-    return ESP_OK; // debug return
+    //return ESP_OK; // debug return
 
     esp_err_t err;
     ESP_LOGI(TAG, "Starting OTA");
@@ -51,7 +51,7 @@ esp_err_t start_ota_ws(void)
 
 esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data)
 {
-    return ESP_OK; // debug return
+    //return ESP_OK; // debug return
 
 
     if (image_header_was_checked == false) // first segment
@@ -83,7 +83,7 @@ esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data)
 
 esp_err_t end_ota_ws(void)
 {
-        return ESP_OK; // debug return
+        //return ESP_OK; // debug return
 
     esp_err_t err = esp_ota_end(update_handle);
     if (err != ESP_OK) {
@@ -99,4 +99,8 @@ esp_err_t end_ota_ws(void)
         return ESP_FAIL;
     }
     return  ESP_OK;
+}
+esp_err_t abort_ota_ws(void)
+{
+    return esp_ota_abort(update_handle);
 }

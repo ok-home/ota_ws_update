@@ -171,7 +171,7 @@
         function receiveWsData(data) {
             try {
                 let obj = JSON.parse(data);
-                console.log(data);
+                //console.log(data);
                 switch (obj.name) {
                     case "otaSetChunkSize":
                         otaSetChunkSize = obj.value;
@@ -180,7 +180,7 @@
                         let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
                         document.getElementById("otaPogress").value = obj.value;
                         document.getElementById("otaStartCancel").innerHTML = "Ota Transfer. Size = " + otaData.length + " Segment = " + obj.value + " Click to Cancel";
-                        console.log("sock send " + obj.value + " " + otaDataSend.length);
+                        //console.log("sock send " + obj.value + " " + otaDataSend.length);
                         socket.send(otaDataSend);
                         break;
                     case "otaEnd":
