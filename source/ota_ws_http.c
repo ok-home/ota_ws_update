@@ -155,8 +155,8 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
         }
         if (strncmp(json_key, OTA_PROCESS_ROLLBACK, sizeof(OTA_PROCESS_ROLLBACK)) == 0) // process rollback ?
         {
-            ESP_LOGI(TAG,"rollback command %s %s",json_key,json_value)
-            if(srtncmp(json_value,"true",sizeof("true")) == 0)
+            ESP_LOGI(TAG,"rollback command %s %s",json_key,json_value);
+            if(strncmp(json_value,"true",sizeof("true")) == 0)
             {
                 ret = rollback_ota_ws(true); // rollback
             }
