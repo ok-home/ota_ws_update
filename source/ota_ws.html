@@ -69,28 +69,38 @@
     <div class="column">
         <button class="btn" id="goHome">На главную</button>
     </div>
-    <div class="cl1" style="display:none">
-        <label class="cl01" for="otaFile">Ota File Name</label>
-        <input class="cl02" type="file" id="otaFile" placeholder="select file" onchange="readOtaFile(this)">
-    </div>
-    <div class="column" style="display:block" id="otaFileSelectVisible">
-        <button class="btn" id="otaFileSelect" onclick="document.getElementById('otaFile').click()">File Select</button>
-    </div>
-
-    <div class="column" style="display:none" id="otaStartVisible">
-        <button class="btn" id="otaStartCancel">Ota Start</button>
-    </div>
-    <div class="column" style="display:none" id="otaReStartVisible">
-        <button class="btn" id="otaReStart">Ota ReStart</button>
-    </div>
-    <div id="otaProgressVisible" style="display:none">
-        <div class="cl1">
-            <progress class="cl02" id="otaPogress" max=100 value=0>
+    <div id="rollback" style="display:none">
+        <div class="column" >
+            <button class="btn" id="otaVerifyApp">Ota APP veryfyed</button>
+        </div>
+        <div class="column">
+            <button class="btn" id="otaRollback">Ota APP rollback and restart</button>
         </div>
     </div>
+    <div id="update" style="display:block">
+        <div class="cl1" style="display:none">
+            <label class="cl01" for="otaFile">Ota File Name</label>
+            <input class="cl02" type="file" id="otaFile" placeholder="select file" onchange="readOtaFile(this)">
+        </div>
+        <div class="column" style="display:block" id="otaFileSelectVisible">
+            <button class="btn" id="otaFileSelect" onclick="document.getElementById('otaFile').click()">File
+                Select</button>
+        </div>
 
+        <div class="column" style="display:none" id="otaStartVisible">
+            <button class="btn" id="otaStartCancel">Ota Start</button>
+        </div>
+        <div class="column" style="display:none" id="otaReStartVisible">
+            <button class="btn" id="otaReStart">Ota ReStart</button>
+        </div>
+        <div id="otaProgressVisible" style="display:none">
+            <div class="cl1">
+                <progress class="cl02" id="otaPogress" max=100 value=0>
+            </div>
+        </div>
+    </div>
     <script>
-        
+
         let otaData;
         let otaSetChunkSize = 0;
         let otaStartsegment = 0;
@@ -105,8 +115,8 @@
 
             reader.onload = function () {
                 otaData = new Uint8Array(reader.result);
-//                console.log(reader.result);
-//                console.log(otaData.length);
+                //                console.log(reader.result);
+                //                console.log(otaData.length);
                 document.getElementById("otaStartVisible").style.display = "block";
                 document.getElementById("otaProgressVisible").style.display = "none";
                 document.getElementById("otaReStartVisible").style.display = "none";
@@ -123,7 +133,7 @@
 
                 socket.send(JSON.stringify({ name: "otaSize", value: otaData.length }));
                 //console.log(JSON.stringify({ name: "otaSize", value: otaData.length }));
-                
+
                 otaStarted = 1;
                 this.innerHTML = "Click to Cancel";
                 document.getElementById("otaFileSelect").disabled = true;
@@ -156,8 +166,8 @@
             receiveWsData(JSON.stringify({ name: "otaSetChunkSize", value: 1024 }));
             while (otaStartsegment + otaSetChunkSize <= otaData.length && otaStarted == 1) {
                 await sleep(1000);
-                if(otaStarted == 1){
-                receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
+                if (otaStarted == 1) {
+                    receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
                 }
                 otaStartsegment += otaSetChunkSize;
             }
@@ -205,6 +215,11 @@
                         document.getElementById("otaReStartVisible").style.display = "block";
                         document.getElementById("otaReStart").innerHTML = "Transfer Cancel " + obj.value;
                         document.getElementById("otaReStart").disabled = true;
+                        break;
+                    case "otaCheckRollback":
+                        document.getElementById("rollback").style.display = "block";
+                        document.getElementById("update").style.display = "none";
+                        break;
                 }
             }
             catch
@@ -214,7 +229,21 @@
         };
     </script>
 
-    <script>  // Прием, обработка и отправка данных в WS
+    <script>  // rollback
+        document.getElementById("otaVerifyApp").addEventListener("click", function (e) {
+        socket.send(JSON.stringify({ name: "otaProcessRollback", value: "false" }));
+        document.getElementById("rollback").style.display = "none";
+        document.getElementById("update").style.display = "block";
+            console.log(JSON.stringify({ name: "otaProcessRollback", value: "false" }));
+        });
+
+        document.getElementById("otaRollback").addEventListener("click", function (e) {
+        socket.send(JSON.stringify({ name: "otaProcessRollback", value: "true" }));
+        document.getElementById("rollback").style.display = "none";
+        document.getElementById("update").style.display = "block";
+            console.log(JSON.stringify({ name: "otaProcessRollback", value: "true" }));
+        });
+
     </script>
 
     <script> // основной старт скрипта, открыть сокет

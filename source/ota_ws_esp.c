@@ -104,3 +104,35 @@ esp_err_t abort_ota_ws(void)
 {
     return esp_ota_abort(update_handle);
 }
+// false - rollback disable
+// true - rollback enable
+bool check_ota_ws_rollback_enable(void)
+{
+#ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE
+    esp_ota_img_states_t ota_state_running_part;
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    if (esp_ota_get_state_partition(running, &ota_state_running_part) == ESP_OK) {
+        if (ota_state_running_part == ESP_OTA_IMG_PENDING_VERIFY) {
+            ESP_LOGI(TAG, "Running app has ESP_OTA_IMG_PENDING_VERIFY state");
+            return true;
+        }
+    }
+#endif
+    return false;    
+}
+// rollback == true - rollback
+// rollback == false - app valid? no rollback
+esp_err_t rollback_ota_ws(bool rollback)
+{
+#ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE
+    if(rollback == false)
+    {
+        return esp_ota_mark_app_valid_cancel_rollback(); // app valid
+    }
+    else
+    {
+        return esp_ota_mark_app_invalid_rollback_and_reboot(); // app rolback & reboot
+    }
+#endif
+    return ESP_FAIL;
+}

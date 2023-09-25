@@ -67,18 +67,24 @@ static esp_err_t send_json_string(char *str, httpd_req_t *req)
 }
 static esp_err_t ota_ws_handler(httpd_req_t *req)
 {
-
-    if (req->method == HTTP_GET)
-    {
-        ESP_LOGI(TAG, "Handshake done, the new connection was opened");
-        return ESP_OK;
-    }
     char json_key[64] = {0};
     char json_value[64] = {0};
     char json_str[128] = {0};
 
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
+
+
+    if (req->method == HTTP_GET)
+    {
+        ESP_LOGI(TAG, "Handshake done, the new connection was opened");
+        if(check_ota_ws_rollback_enable())
+        {
+        snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\" }", OTA_CHECK_ROLLBACK, "true");
+        send_json_string(json_str, req);
+        }
+        return ESP_OK;
+    }
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
     /* Set max_len = 0 to get the frame len */
     esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
@@ -147,10 +153,25 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
             ret = ESP_OK;
             goto _recv_ret;
         }
+        if (strncmp(json_key, OTA_PROCESS_ROLLBACK, sizeof(OTA_PROCESS_ROLLBACK)) == 0) // process rollback ?
+        {
+            ESP_LOGI(TAG,"rollback command %s %s",json_key,json_value)
+            if(srtncmp(json_value,"true",sizeof("true")) == 0)
+            {
+                ret = rollback_ota_ws(true); // rollback
+            }
+            else
+            {
+                ret = rollback_ota_ws(false);  // app veryfied
+            }
+            goto _recv_ret;
+        }
+
         if (strncmp(json_key, OTA_RESTART_ESP, sizeof(OTA_RESTART_ESP)) == 0) // cancel ota
         {
             esp_restart();
         }
+        
     }
     else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY && ota_started)
     {
