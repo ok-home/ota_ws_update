@@ -1,3 +1,5 @@
 .vscode/
 .devcontainer/
 build/
+example_ota_ws/sdkconfig
+example_ota_ws/sdkconfig.old

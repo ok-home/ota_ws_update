@@ -70,7 +70,7 @@
         <button class="btn" id="goHome">Home Page</button>
     </div>
     <div id="rollback" style="display:none">
-        <div class="column" >
+        <div class="column">
             <button class="btn" id="otaVerifyApp">Click to confirm and commit OTA update</button>
         </div>
         <div class="column">
@@ -115,8 +115,6 @@
 
             reader.onload = function () {
                 otaData = new Uint8Array(reader.result);
-                //                console.log(reader.result);
-                //                console.log(otaData.length);
                 document.getElementById("otaStartVisible").style.display = "block";
                 document.getElementById("otaProgressVisible").style.display = "none";
                 document.getElementById("otaReStartVisible").style.display = "none";
@@ -132,18 +130,14 @@
             if (otaData.length > 0 && otaStarted == 0) {
 
                 socket.send(JSON.stringify({ name: "otaSize", value: otaData.length }));
-                //console.log(JSON.stringify({ name: "otaSize", value: otaData.length }));
-
                 otaStarted = 1;
                 this.innerHTML = "Click to Cancel";
                 document.getElementById("otaFileSelect").disabled = true;
                 document.getElementById("otaProgressVisible").style.display = "block";
                 document.getElementById("otaPogress").max = otaData.length;
-                //tstReceive();
             }
             else {
                 otaStarted = 0;
-                //receiveWsData(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
                 socket.send(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
             }
 
@@ -155,10 +149,9 @@
         });
         document.getElementById("otaReStart").addEventListener("click", function (e) {
             socket.send(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
-            //console.log(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
         });
 
-        /*
+        /*  // debug -> test sample
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
@@ -171,7 +164,6 @@
                 }
                 otaStartsegment += otaSetChunkSize;
             }
-            //console.log(otaStartsegment + " " + otaSetChunkSize + " " + otaData.length + " " + (otaData.length - otaStartsegment));
             if (otaStarted == 1) {
                 receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
                 receiveWsData(JSON.stringify({ name: "otaEnd", value: "OK" }));
@@ -181,7 +173,6 @@
         function receiveWsData(data) {
             try {
                 let obj = JSON.parse(data);
-                //console.log(data);
                 switch (obj.name) {
                     case "otaSetChunkSize":
                         otaSetChunkSize = obj.value;
@@ -190,7 +181,6 @@
                         let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
                         document.getElementById("otaPogress").value = obj.value;
                         document.getElementById("otaStartCancel").innerHTML = "Ota download. Size = " + otaData.length + " Segment = " + obj.value + " Click to Cancel";
-                        //console.log("sock send " + obj.value + " " + otaDataSend.length);
                         socket.send(otaDataSend);
                         break;
                     case "otaEnd":
@@ -224,24 +214,22 @@
             }
             catch
             {
-                console.log(data + " catch");
+                console.log(data + "Error msg");
             }
         };
     </script>
 
     <script>  // rollback
         document.getElementById("otaVerifyApp").addEventListener("click", function (e) {
-        socket.send(JSON.stringify({ name: "otaProcessRollback", value: "false" }));
-        document.getElementById("rollback").style.display = "none";
-        document.getElementById("update").style.display = "block";
-            console.log(JSON.stringify({ name: "otaProcessRollback", value: "false" }));
+            socket.send(JSON.stringify({ name: "otaProcessRollback", value: "false" }));
+            document.getElementById("rollback").style.display = "none";
+            document.getElementById("update").style.display = "block";
         });
 
         document.getElementById("otaRollback").addEventListener("click", function (e) {
-        socket.send(JSON.stringify({ name: "otaProcessRollback", value: "true" }));
-        document.getElementById("rollback").style.display = "none";
-        document.getElementById("update").style.display = "block";
-            console.log(JSON.stringify({ name: "otaProcessRollback", value: "true" }));
+            socket.send(JSON.stringify({ name: "otaProcessRollback", value: "true" }));
+            document.getElementById("rollback").style.display = "none";
+            document.getElementById("update").style.display = "block";
         });
 
     </script>
@@ -256,14 +244,15 @@
 
     <script> // события WS
         socket.onopen = function () {
-            console.log("connect");
+            console.log("connect ws");
         };
         socket.onclose = function (event) {
-            console.log("close");
+            document.location.reload();
+            console.log("close ws");
         };
         socket.onerror = function () {
             document.location.reload();
-            console.log("error");
+            console.log("error ws");
         };
         socket.onmessage = function (event) {
             receiveWsData(event.data);

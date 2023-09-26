@@ -10,7 +10,7 @@
 #include "esp_partition.h"
 #include "esp_image_format.h"
 
-#include "ota_ws_private.h"
+#include "ota_ws_update_private.h"
 
 static const char *TAG = "ota_ws_esp";
 
@@ -27,6 +27,11 @@ esp_err_t start_ota_ws(void)
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
+    if(configured==NULL || running == NULL)
+    {
+        ESP_LOGE(TAG,"OTA data not found");
+        return ESP_FAIL;
+    }
 
     if (configured != running)
     {

@@ -5,8 +5,8 @@
    software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
    CONDITIONS OF ANY KIND, either express or implied.
 */
-#include "ota_ws_private.h"
-#include "ota_ws.h"
+#include "ota_ws_update_private.h"
+#include "ota_ws_update.h"
 
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -234,11 +234,11 @@ _recv_ret:
 // send http initial page and js code
 static esp_err_t ota_get_handler(httpd_req_t *req)
 {
-    extern const unsigned char ota_ws_html_start[] asm("_binary_ota_ws_html_start");
-    extern const unsigned char ota_ws_html_end[] asm("_binary_ota_ws_html_end");
-    const size_t ota_ws_html_size = (ota_ws_html_end - ota_ws_html_start);
+    extern const unsigned char ota_ws_update_html_start[] asm("_binary_ota_ws_update_html_start");
+    extern const unsigned char ota_ws_update_html_end[] asm("_binary_ota_ws_update_html_end");
+    const size_t ota_ws_update_html_size = (ota_ws_update_html_end - ota_ws_update_html_start);
 
-    httpd_resp_send_chunk(req, (const char *)ota_ws_html_start, ota_ws_html_size);
+    httpd_resp_send_chunk(req, (const char *)ota_ws_update_html_start, ota_ws_update_html_size);
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "ota_ws_private.h"
-
 #ifdef __cplusplus
 extern "C"
 {
