@@ -17,9 +17,9 @@
 // #include <esp_log.h>
 
 #include "prv_wifi_connect.h"
-#include "ota_ws.h"
+#include "ota_ws_update.h"
 
-static const char *TAG = "ota_ws";
+//static const char *TAG = "ota_ws";
 
 #define MDNS
 #ifdef MDNS
@@ -54,5 +54,4 @@ void app_main(void)
 #endif // MDNS
 
     prv_start_http_server(PRV_MODE_STAY_ACTIVE, ota_ws_register_uri_handler); // run server
-    // example_echo_ws_server();
 }

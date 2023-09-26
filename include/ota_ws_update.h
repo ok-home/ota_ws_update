@@ -7,10 +7,9 @@ extern "C"
 {
 #endif
 
-
 /*
-*   @brief  register provision handlers ( web page & ws handlers) on existing  httpd server with ws support
-*           uri page -> CONFIG_DEFAULT_URI
+*   @brief  register ota_ws httpd handlers ( web page & ws handlers) on existing  httpd server with ws support
+*           uri page -> CONFIG_OTA_DEFAULT_WS_URI
 *   @param  httpd_handle_t server -> existing server handle
 *   @return
 *           ESP_OK      -> register OK

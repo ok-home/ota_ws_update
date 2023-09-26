@@ -3,7 +3,7 @@
 <html lang="ru">
 
 <head>
-    <title>WiFi connect</title>
+    <title>ОTA UPDATE</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <style>
@@ -64,22 +64,22 @@
 </head>
 
 <body>
-    <div class="hdr">OTA</div>
+    <div class="hdr">OTA UPDATE</div>
 
     <div class="column">
-        <button class="btn" id="goHome">На главную</button>
+        <button class="btn" id="goHome">Home Page</button>
     </div>
     <div id="rollback" style="display:none">
         <div class="column" >
-            <button class="btn" id="otaVerifyApp">Ota APP veryfyed</button>
+            <button class="btn" id="otaVerifyApp">Click to confirm and commit OTA update</button>
         </div>
         <div class="column">
-            <button class="btn" id="otaRollback">Ota APP rollback and restart</button>
+            <button class="btn" id="otaRollback">Cancel OTA. Click to rollback update and restart</button>
         </div>
     </div>
     <div id="update" style="display:block">
         <div class="cl1" style="display:none">
-            <label class="cl01" for="otaFile">Ota File Name</label>
+            <label class="cl01" for="otaFile">Select the new OTA firmware file</label>
             <input class="cl02" type="file" id="otaFile" placeholder="select file" onchange="readOtaFile(this)">
         </div>
         <div class="column" style="display:block" id="otaFileSelectVisible">
@@ -88,10 +88,10 @@
         </div>
 
         <div class="column" style="display:none" id="otaStartVisible">
-            <button class="btn" id="otaStartCancel">Ota Start</button>
+            <button class="btn" id="otaStartCancel">Start OTA update</button>
         </div>
         <div class="column" style="display:none" id="otaReStartVisible">
-            <button class="btn" id="otaReStart">Ota ReStart</button>
+            <button class="btn" id="otaReStart">Reboot with new OTA firmware</button>
         </div>
         <div id="otaProgressVisible" style="display:none">
             <div class="cl1">
@@ -109,7 +109,7 @@
         function readOtaFile(input) {
             let reader = new FileReader();
             let file = input.files[0];
-            document.getElementById('otaFileSelect').innerHTML = "Selected file: " + file.name;
+            document.getElementById('otaFileSelect').innerHTML = "Selected firmware file: " + file.name;
             reader.readAsArrayBuffer(file);
             input.value = null;
 
@@ -158,7 +158,7 @@
             //console.log(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
         });
 
-        //
+        /*
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
@@ -177,7 +177,7 @@
                 receiveWsData(JSON.stringify({ name: "otaEnd", value: "OK" }));
             }
         }
-        //
+        */
         function receiveWsData(data) {
             try {
                 let obj = JSON.parse(data);
@@ -189,7 +189,7 @@
                     case "otaGetChunk":
                         let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
                         document.getElementById("otaPogress").value = obj.value;
-                        document.getElementById("otaStartCancel").innerHTML = "Ota Transfer. Size = " + otaData.length + " Segment = " + obj.value + " Click to Cancel";
+                        document.getElementById("otaStartCancel").innerHTML = "Ota download. Size = " + otaData.length + " Segment = " + obj.value + " Click to Cancel";
                         //console.log("sock send " + obj.value + " " + otaDataSend.length);
                         socket.send(otaDataSend);
                         break;
@@ -197,11 +197,11 @@
                         otaStartsegment = 0;
                         otaStarted = 0;
                         document.getElementById("otaStartVisible").style.display = "none";
-                        document.getElementById("otaStartCancel").innerHTML = "Ota Start";
+                        document.getElementById("otaStartCancel").innerHTML = "Start OTA update";
                         document.getElementById("otaPogress").value = otaData.length;
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStartVisible").style.display = "block";
-                        document.getElementById("otaReStart").innerHTML = "Transfer Done Click to restart ESP";
+                        document.getElementById("otaReStart").innerHTML = "The firmware is loaded. Click to reboot with new OTA firmware";
                         document.getElementById("otaReStart").disabled = false;
                         break;
                     case "otaError":
@@ -209,11 +209,11 @@
                         otaStartsegment = 0;
                         otaStarted = 0;
                         document.getElementById("otaStartVisible").style.display = "none";
-                        document.getElementById("otaStartCancel").innerHTML = "Ota Start";
+                        document.getElementById("otaStartCancel").innerHTML = "Start OTA update";
                         document.getElementById("otaPogress").value = otaData.length;
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStartVisible").style.display = "block";
-                        document.getElementById("otaReStart").innerHTML = "Transfer Cancel " + obj.value;
+                        document.getElementById("otaReStart").innerHTML = "ОТА firmware download canceled " + obj.value;
                         document.getElementById("otaReStart").disabled = true;
                         break;
                     case "otaCheckRollback":
@@ -262,6 +262,7 @@
             console.log("close");
         };
         socket.onerror = function () {
+            document.location.reload();
             console.log("error");
         };
         socket.onmessage = function (event) {

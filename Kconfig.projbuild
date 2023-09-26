@@ -1,0 +1,21 @@
+menu "OTA WS UPDATE"
+
+    config OTA_DEFAULT_URI
+        string "OTA page URI"
+        default "/ota"
+        help
+            WEB page URI to OTA update.
+
+    config OTA_DEFAULT_WS_URI
+        string "OTA ws URI"
+        default "/ota/ws"
+        help
+            WEB ws URI to OTA update.
+
+    config OTA_CHUNK_SIZE
+        int "Ota chunk size"
+        default 8192
+        help
+            Ota download chunk size.
+
+endmenu

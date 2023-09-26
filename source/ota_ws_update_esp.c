@@ -1,4 +1,10 @@
+/* 
+   This example code is in the Public Domain (or CC0 licensed, at your option.)
 
+   Unless required by applicable law or agreed to in writing, this
+   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, either express or implied.
+*/
 #include "esp_ota_ops.h"
 #include "esp_flash_partitions.h"
 #include "esp_partition.h"
@@ -7,11 +13,9 @@
 #include "ota_ws_private.h"
 
 static const char *TAG = "ota_ws_esp";
-/*an ota data write buffer ready to write to the flash*/
-//static char ota_write_data[BUFFSIZE + 1] = {0};
+
 static const esp_partition_t *update_partition = NULL;
 static bool image_header_was_checked = false;
-static int binary_file_length = 0;
 static esp_ota_handle_t update_handle = 0;
 
 esp_err_t start_ota_ws(void)
@@ -48,7 +52,6 @@ esp_err_t start_ota_ws(void)
     image_header_was_checked = false;
     return ESP_OK;
 }
-
 esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data)
 {
     //return ESP_OK; // debug return
@@ -67,7 +70,7 @@ esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data)
         }
         else
         {
-            ESP_LOGE(TAG, "received package is not fit len");
+            ESP_LOGE(TAG, "Received package is not fit len");
             return ESP_FAIL;
         }
     }
@@ -76,11 +79,8 @@ esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data)
     {
         return ESP_FAIL;
     }
-    binary_file_length += data_read;
-    ESP_LOGD(TAG, "Written image length %d", binary_file_length);
     return ESP_OK;
 }
-
 esp_err_t end_ota_ws(void)
 {
         //return ESP_OK; // debug return
@@ -121,7 +121,7 @@ bool check_ota_ws_rollback_enable(void)
     return false;    
 }
 // rollback == true - rollback
-// rollback == false - app valid? no rollback
+// rollback == false - app valid? confirm update -> no rollback
 esp_err_t rollback_ota_ws(bool rollback)
 {
 #ifdef CONFIG_BOOTLOADER_APP_ROLLBACK_ENABLE

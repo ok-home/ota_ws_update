@@ -14,7 +14,6 @@
 #define OTA_CHECK_ROLLBACK "otaCheckRollback"
 #define OTA_PROCESS_ROLLBACK "otaProcessRollback"
 
-#define OTA_CHUNK_SIZE 4096*2
 
 esp_err_t start_ota_ws(void);
 esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data);

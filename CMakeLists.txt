@@ -1,10 +1,15 @@
-# The following lines of boilerplate have to be in your project's CMakeLists
-# in this exact order for cmake to work correctly
-cmake_minimum_required(VERSION 3.16)
-
-# (Not part of the boilerplate)
-# This example uses an extra component for common functions such as Wi-Fi and Ethernet connection.
-#set(EXTRA_COMPONENT_DIRS $ENV{IDF_PATH}/examples/common_components/protocol_examples_common)
-
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(ota_ws)
+idf_component_register(
+                    SRCS 
+                      source/ota_ws_update_esp.c
+                      source/ota_ws_update_http.c 
+                    INCLUDE_DIRS 
+                      include
+                    PRIV_INCLUDE_DIRS
+                      private_include
+                    REQUIRES
+                      esp_http_server
+                      app_update
+                      #esp_wifi
+                    EMBED_FILES 
+                      source/ota_ws_update.html
+)

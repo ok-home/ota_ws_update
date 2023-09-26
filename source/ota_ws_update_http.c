@@ -1,3 +1,10 @@
+/* 
+   This example code is in the Public Domain (or CC0 licensed, at your option.)
+
+   Unless required by applicable law or agreed to in writing, this
+   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+   CONDITIONS OF ANY KIND, either express or implied.
+*/
 #include "ota_ws_private.h"
 #include "ota_ws.h"
 
@@ -5,21 +12,28 @@
 #include "freertos/queue.h"
 
 #include "jsmn.h"
-
+/*
 #define OTA_DEFAULT_WS_URI "/ws"
 #define OTA_DEFAULT_URI "/"
+#define OTA_CHUNK_SIZE 4096*2
+*/
+#define OTA_DEFAULT_WS_URI CONFIG_OTA_DEFAULT_WS_URI
+#define OTA_DEFAULT_URI CONFIG_OTA_DEFAULT_URI
+#define OTA_CHUNK_SIZE CONFIG_OTA_CHUNK_SIZE
 
-static const char *TAG = "ota_ws";
 
-static int ota_size;
-static int ota_start_chunk;
-static int ota_started;
+static const char *TAG = "ota_ws_http";
+
+static int ota_size;  // ota firmware size
+static int ota_start_chunk; // start address of http chunk
+static int ota_started; // ota download started
 
 static esp_err_t json_to_str_parm(char *jsonstr, char *nameStr, char *valStr);
 static esp_err_t send_json_string(char *str, httpd_req_t *req);
 static esp_err_t ota_ws_handler(httpd_req_t *req);
 static void ota_error(httpd_req_t *req, char *code, char *msg);
 
+// abort OTA, send error/cancel msg to ws
 static void ota_error(httpd_req_t *req, char *code, char *msg)
 {
     char json_str[128];
@@ -56,6 +70,7 @@ static esp_err_t json_to_str_parm(char *jsonstr, char *nameStr, char *valStr) //
         valStr[0] = 0;
     return ESP_OK;
 }
+// send string to ws
 static esp_err_t send_json_string(char *str, httpd_req_t *req)
 {
     httpd_ws_frame_t ws_pkt;
@@ -65,6 +80,8 @@ static esp_err_t send_json_string(char *str, httpd_req_t *req)
     ws_pkt.len = strlen(str);
     return httpd_ws_send_frame(req, &ws_pkt);
 }
+// main ws OTA handler
+// Handshake and process OTA
 static esp_err_t ota_ws_handler(httpd_req_t *req)
 {
     char json_key[64] = {0};
@@ -78,7 +95,7 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
     if (req->method == HTTP_GET)
     {
         ESP_LOGI(TAG, "Handshake done, the new connection was opened");
-        if(check_ota_ws_rollback_enable())
+        if(check_ota_ws_rollback_enable()) // check rollback enable, send cmd to enable rollback dialog on html
         {
         snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\" }", OTA_CHECK_ROLLBACK, "true");
         send_json_string(json_str, req);
@@ -86,7 +103,7 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
         return ESP_OK;
     }
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    /* Set max_len = 0 to get the frame len */
+    // Set max_len = 0 to get the frame len 
     esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
     if (ret != ESP_OK)
     {
@@ -95,7 +112,7 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
     }
     if (ws_pkt.len)
     {
-        /* ws_pkt.len + 1 is for NULL termination as we are expecting a string */
+        // ws_pkt.len + 1 is for NULL termination as we are expecting a string 
         buf = calloc(1, ws_pkt.len + 1);
         if (buf == NULL)
         {
@@ -103,7 +120,7 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
             return ESP_ERR_NO_MEM;
         }
         ws_pkt.payload = buf;
-        /* Set max_len = ws_pkt.len to get the frame payload */
+        // Set max_len = ws_pkt.len to get the frame payload 
         ret = httpd_ws_recv_frame(req, &ws_pkt, ws_pkt.len);
         if (ret != ESP_OK)
         {
@@ -112,10 +129,9 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
         }
     }
     ret = ESP_OK;
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT)
+    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT) // process json cmd
     {
-        //ESP_LOGI(TAG, "Rcv txt msg len=%d data=%s", ws_pkt.len, buf);
-        if (json_to_str_parm((char *)buf, json_key, json_value))
+        if (json_to_str_parm((char *)buf, json_key, json_value)) // decode json to key/value parm
         {
             ota_error(req, OTA_ERROR, "Error json str");
             goto _recv_ret;
@@ -136,9 +152,9 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
             }
             ota_started = 1;
             ota_start_chunk = 0;
-            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_SET_CHUNK_SIZE, OTA_CHUNK_SIZE);
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_SET_CHUNK_SIZE, OTA_CHUNK_SIZE); // set download chunk
             send_json_string(json_str, req);
-            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_GET_CHUNK, ota_start_chunk);
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":%d}", OTA_GET_CHUNK, ota_start_chunk); // cmd -> send first chunk with start addresss = 0
             send_json_string(json_str, req);
         }
         if (strncmp(json_key, OTA_CANCEL, sizeof(OTA_CANCEL)) == 0) // cancel ota
@@ -153,12 +169,12 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
             ret = ESP_OK;
             goto _recv_ret;
         }
-        if (strncmp(json_key, OTA_PROCESS_ROLLBACK, sizeof(OTA_PROCESS_ROLLBACK)) == 0) // process rollback ?
+        if (strncmp(json_key, OTA_PROCESS_ROLLBACK, sizeof(OTA_PROCESS_ROLLBACK)) == 0) // process rollback &
         {
             ESP_LOGI(TAG,"rollback command %s %s",json_key,json_value);
             if(strncmp(json_value,"true",sizeof("true")) == 0)
             {
-                ret = rollback_ota_ws(true); // rollback
+                ret = rollback_ota_ws(true); // rollback and restart
             }
             else
             {
@@ -166,40 +182,37 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
             }
             goto _recv_ret;
         }
-
         if (strncmp(json_key, OTA_RESTART_ESP, sizeof(OTA_RESTART_ESP)) == 0) // cancel ota
         {
             esp_restart();
         }
         
     }
-    else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY && ota_started)
+    else if (ws_pkt.type == HTTPD_WS_TYPE_BINARY && ota_started) // download OTA firmware with chunked part
     {
-        //ESP_LOGI(TAG, "Rcv bin msg start=%d len=%d", ota_start_chunk, ws_pkt.len);
 
-        if (ota_start_chunk + ws_pkt.len < ota_size)
+        if (ota_start_chunk + ws_pkt.len < ota_size) //read chuk of ota
         {
-            ret = write_ota_ws(ws_pkt.len, buf);
+            ret = write_ota_ws(ws_pkt.len, buf);  // write chunk of ota
             if (ret)
             {
                 ota_error(req, OTA_ERROR, "Error write ota");
                 goto _recv_ret;
             }
             ota_start_chunk += ws_pkt.len;
-            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\": %d }", OTA_GET_CHUNK, ota_start_chunk);
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\": %d }", OTA_GET_CHUNK, ota_start_chunk); // cmd -> next chunk
             send_json_string(json_str, req);
 
         }
-        else
+        else        // last chunk and end ota
         {
-            // last chunk and end ota
-            ret = write_ota_ws(ws_pkt.len, buf);
+            ret = write_ota_ws(ws_pkt.len, buf); // write last chunk of ota
             if (ret)
             {
                 ota_error(req, OTA_ERROR, "Error write ota");
                 goto _recv_ret;
             }
-            ret = end_ota_ws();
+            ret = end_ota_ws(); // end ota
             if (ret)
             {
                 ota_error(req, OTA_ERROR, "Error end ota");
@@ -209,7 +222,7 @@ static esp_err_t ota_ws_handler(httpd_req_t *req)
             ota_start_chunk = 0;
             ota_started = 0;
             ESP_LOGI(TAG,"OTA END OK");
-            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\" }", OTA_END, "OK");
+            snprintf(json_str, sizeof(json_str), "{\"name\":\"%s\",\"value\":\"%s\" }", OTA_END, "OK"); // send ota end cmd ( ota ok )
             send_json_string(json_str, req);
         }
     }
@@ -217,6 +230,8 @@ _recv_ret:
     free(buf);
     return ret;
 }
+// main http get handler
+// send http initial page and js code
 static esp_err_t ota_get_handler(httpd_req_t *req)
 {
     extern const unsigned char ota_ws_html_start[] asm("_binary_ota_ws_html_start");
@@ -238,6 +253,8 @@ static const httpd_uri_t ws = {
     .handler = ota_ws_handler,
     .user_ctx = NULL,
     .is_websocket = true};
+
+// register all ota uri handler
 esp_err_t ota_ws_register_uri_handler(httpd_handle_t server)
 {
     esp_err_t ret = ESP_OK;
