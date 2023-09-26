@@ -28,9 +28,8 @@ static httpd_handle_t start_webserver(void)
     // Start the httpd server
     ESP_LOGI(TAG, "Starting server on port: '%d'", config.server_port);
     if (httpd_start(&server, &config) == ESP_OK) {
-    /****************** Registering the ws handler ****************/
         ESP_LOGI(TAG, "Registering URI handlers");
-        //register  ota_ws handler
+    /****************** Registering the ws handler ****************/
         ota_ws_register_uri_handler(server);
         // end register ota_ws handler
         return server;
