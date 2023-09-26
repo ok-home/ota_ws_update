@@ -1,4 +1,4 @@
-[En](/README.md)
+[Ru](/README-RU.md)
 
 | Supported Targets |  
 | ESP32 ESP32S3 ESP32C3 | 
