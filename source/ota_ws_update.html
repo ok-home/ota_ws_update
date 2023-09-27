@@ -247,11 +247,11 @@
             console.log("connect ws");
         };
         socket.onclose = function (event) {
-            document.location.reload();
+            //document.location.reload();
             console.log("close ws");
         };
         socket.onerror = function () {
-            document.location.reload();
+            //document.location.reload();
             console.log("error ws");
         };
         socket.onmessage = function (event) {

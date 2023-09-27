@@ -13,11 +13,15 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_wifi.h"
+#include "esp_http_server.h"
 
 // #include <esp_log.h>
 
-#include "prv_wifi_connect.h"
+#include "nvs_wifi_connect.h"
 #include "ota_ws_update.h"
+
+extern esp_err_t example_register_uri_handler(httpd_handle_t server);
+void example_echo_ws_server(void);
 
 //static const char *TAG = "ota_ws";
 
@@ -45,13 +49,16 @@ static void initialise_mdns(void)
 }
 #endif // MDNS
 
+
+
 void app_main(void)
 {
-    prv_wifi_connect(); // return with error ?
+    nvs_wifi_connect(); // return with error ?
 
 #ifdef MDNS
     initialise_mdns();
 #endif // MDNS
 
-    prv_start_http_server(PRV_MODE_STAY_ACTIVE, ota_ws_register_uri_handler); // run server
+    example_echo_ws_server();
+    //prv_start_http_server(PRV_MODE_STAY_ACTIVE, ota_ws_register_uri_handler); // run server
 }
