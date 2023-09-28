@@ -236,7 +236,9 @@
 
     <script> // основной старт скрипта, открыть сокет
         // создать сокет по адресу
-        let wsHostStr = "ws://" + document.location.host + document.location.pathname;
+        let protocol = "ws:"
+        if(document.location.protocol == "https:") protocol = "wss:"
+        let wsHostStr = protocol + "//" + document.location.host + document.location.pathname;
         wsHostStr += (document.location.pathname == '/') ? "ws" : "/ws";
         var socket = new WebSocket(wsHostStr);
         socket.binaryType = "arraybuffer";
