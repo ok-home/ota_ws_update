@@ -50,6 +50,6 @@ ota_1,    app,  ota_1,    ,  1M
  - Параметры menuconfig
    - CONFIG_PARTITION_TABLE_CUSTOM=y
    - CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
-   - CONFIG_WS_TRANSPORT=y
+   - CONFIG_HTTPD_WS_SUPPORT=y
    - CONFIG_APP_ROLLBACK_ENABLE=y
   

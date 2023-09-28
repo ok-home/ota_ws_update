@@ -151,11 +151,10 @@
             socket.send(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
         });
 
-        
+        /*  // debug -> test sample        
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
         }
-        /*  // debug -> test sample
         async function tstReceive() {
             receiveWsData(JSON.stringify({ name: "otaSetChunkSize", value: 1024 }));
             while (otaStartsegment + otaSetChunkSize <= otaData.length && otaStarted == 1) {
@@ -247,15 +246,13 @@
         socket.onopen = function () {
             console.log("connect ws");
         };
-        socket.onclose = async function (event) {
+        socket.onclose = function (event) {
             console.log("close ws - reload");
-            await sleep(2000);
-            document.location.reload();
-            //console.log("close ws");
+            setTimeout(() => document.location.reload(), 2000);
         };
         socket.onerror = function () {
-            //document.location.reload();
             console.log("error ws");
+            setTimeout(() => document.location.reload(), 2000);
         };
         socket.onmessage = function (event) {
             receiveWsData(event.data);
