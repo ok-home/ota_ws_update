@@ -32,13 +32,11 @@ static bool image_header_was_checked = false;
 static esp_ota_handle_t update_handle = 0;
 // pre-encrypted handle
 static esp_decrypt_handle_t enc_handle; // handle
-static esp_decrypt_cfg_t enc_cfg; // cfg
-static  pre_enc_decrypt_arg_t enc_arg; // arg
+static esp_decrypt_cfg_t enc_cfg = {}; // cfg
+static  pre_enc_decrypt_arg_t enc_arg = {}; // arg
 
 extern const char rsa_private_pem_start[] asm("_binary_private_pem_start");
 extern const char rsa_private_pem_end[]   asm("_binary_private_pem_end");
-
-
 
 esp_err_t start_ota_ws(void)
 {
@@ -92,8 +90,8 @@ esp_err_t start_ota_ws(void)
 }
 esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
 {
-    //return ESP_OK; // debug return
-    enc_arg.data_in = enc_ota_write_data;
+     //return ESP_OK; // debug return
+    enc_arg.data_in = (char*)enc_ota_write_data;
     enc_arg.data_in_len = enc_data_read;
     esp_err_t ret = esp_encrypted_img_decrypt_data(enc_handle, &enc_arg);
     if(ret)
@@ -103,7 +101,7 @@ esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
             return ret;
     }
     int data_read = enc_arg.data_out_len;
-    uint8_t *ota_write_data = enc_arg.data_out;
+    uint8_t *ota_write_data = (uint8_t*)enc_arg.data_out;
 
     if (image_header_was_checked == false) // first segment
     {
@@ -133,7 +131,7 @@ esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
     ret = ESP_OK;
 
 _ret_free:
-    free enc_arg.data_out;
+    free(enc_arg.data_out);
     return ret;
 }
 esp_err_t end_ota_ws(void)
@@ -144,7 +142,7 @@ esp_err_t end_ota_ws(void)
     {
         ESP_LOGE(TAG, "esp_encrypted_img_decrypt_end (%s)!", esp_err_to_name(ret));
         abort_ota_ws();
-        return ret
+        return ret;
     }
 
     ret = esp_ota_end(update_handle);

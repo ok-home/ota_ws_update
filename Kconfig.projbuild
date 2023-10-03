@@ -19,7 +19,7 @@ menu "OTA WS UPDATE"
             Ota download chunk size.
 
     config OTA_PRE_ENCRYPTED_MODE
-        bool "Ota chunk size"
+        bool "Ota pre-encrypted mode"
         default n
         help
             Ota pre-encrypted mode.
