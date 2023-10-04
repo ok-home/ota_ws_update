@@ -14,6 +14,7 @@ if(CONFIG_OTA_PRE_ENCRYPTED_MODE)
                       #esp_wifi
                     EMBED_FILES 
                       source/ota_ws_update.html
+                    EMBED_TXTFILES  
                       rsa_key/private.pem
   )
     #openssl genrsa -out rsa_key/private.pem 3072

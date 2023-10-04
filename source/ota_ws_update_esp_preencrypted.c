@@ -32,7 +32,7 @@ static bool image_header_was_checked = false;
 static esp_ota_handle_t update_handle = 0;
 // pre-encrypted handle
 static esp_decrypt_handle_t enc_handle; // handle
-static esp_decrypt_cfg_t enc_cfg = {}; // cfg
+//static esp_decrypt_cfg_t enc_cfg = {}; // cfg
 static  pre_enc_decrypt_arg_t enc_arg = {}; // arg
 
 extern const char rsa_private_pem_start[] asm("_binary_private_pem_start");
@@ -75,6 +75,7 @@ esp_err_t start_ota_ws(void)
 
     image_header_was_checked = false;
 
+    esp_decrypt_cfg_t enc_cfg; // cfg
     enc_cfg.rsa_priv_key = rsa_private_pem_start;
     enc_cfg.rsa_priv_key_len = rsa_private_pem_end-rsa_private_pem_start;
 
@@ -91,6 +92,7 @@ esp_err_t start_ota_ws(void)
 esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
 {
      //return ESP_OK; // debug return
+     pre_enc_decrypt_arg_t enc_arg;
     enc_arg.data_in = (char*)enc_ota_write_data;
     enc_arg.data_in_len = enc_data_read;
     esp_err_t ret = esp_encrypted_img_decrypt_data(enc_handle, &enc_arg);
@@ -144,7 +146,6 @@ esp_err_t end_ota_ws(void)
         abort_ota_ws();
         return ret;
     }
-
     ret = esp_ota_end(update_handle);
     if (ret != ESP_OK) {
         if (ret == ESP_ERR_OTA_VALIDATE_FAILED) {
@@ -168,7 +169,10 @@ esp_err_t abort_ota_ws(void)
 {
     esp_err_t ret = esp_encrypted_img_decrypt_abort(enc_handle);
     if(ret)
-     {return ret;}
+    {
+        esp_ota_abort(update_handle);
+        return ret;
+    }
     return esp_ota_abort(update_handle);
 }
 // false - rollback disable
