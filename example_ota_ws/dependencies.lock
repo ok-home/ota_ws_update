@@ -1,9 +1,15 @@
 dependencies:
+  espressif/esp_encrypted_img:
+    component_hash: d2cbae51c946ec66bbf0e62d2b406aa6c92c0c97d7be7c32fb6ca541a36d20de
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 2.2.0
   idf:
     component_hash: null
     source:
       type: idf
     version: 5.2.0
-manifest_hash: 2ac596d0d5a708817329b21531cbf3574c7c8daaf36dca979b5dd32a78fc2857
+manifest_hash: 0ee5924d580a0ce00333564716b4649c3118e31ddbcaf0fc6cd6071b000406ab
 target: esp32s3
 version: 1.0.0

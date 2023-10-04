@@ -18,9 +18,12 @@ static const esp_partition_t *update_partition = NULL;
 static bool image_header_was_checked = false;
 static esp_ota_handle_t update_handle = 0;
 
+//static int tstc=0;
+
 esp_err_t start_ota_ws(void)
 {
     //return ESP_OK; // debug return
+    //tstc=0;
 
     esp_err_t err;
     ESP_LOGI(TAG, "Starting OTA");
@@ -80,10 +83,12 @@ esp_err_t write_ota_ws(int data_read, uint8_t *ota_write_data)
         }
     }
     esp_err_t err = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
+    //tstc+=data_read;
     if (err != ESP_OK)
     {
         return ESP_FAIL;
     }
+    //ESP_LOGI("tstc","%d",tstc);
     return ESP_OK;
 }
 esp_err_t end_ota_ws(void)

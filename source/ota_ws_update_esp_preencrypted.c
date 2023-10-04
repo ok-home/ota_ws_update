@@ -32,8 +32,10 @@ static bool image_header_was_checked = false;
 static esp_ota_handle_t update_handle = 0;
 // pre-encrypted handle
 static esp_decrypt_handle_t enc_handle; // handle
-//static esp_decrypt_cfg_t enc_cfg = {}; // cfg
+static esp_decrypt_cfg_t enc_cfg = {}; // cfg
 static  pre_enc_decrypt_arg_t enc_arg = {}; // arg
+
+static int tst_c=0;
 
 extern const char rsa_private_pem_start[] asm("_binary_private_pem_start");
 extern const char rsa_private_pem_end[]   asm("_binary_private_pem_end");
@@ -41,6 +43,7 @@ extern const char rsa_private_pem_end[]   asm("_binary_private_pem_end");
 esp_err_t start_ota_ws(void)
 {
     //return ESP_OK; // debug return
+    tst_c=0;
 
     esp_err_t err;
     ESP_LOGI(TAG, "Starting OTA");
@@ -75,10 +78,10 @@ esp_err_t start_ota_ws(void)
 
     image_header_was_checked = false;
 
-    esp_decrypt_cfg_t enc_cfg; // cfg
     enc_cfg.rsa_priv_key = rsa_private_pem_start;
     enc_cfg.rsa_priv_key_len = rsa_private_pem_end-rsa_private_pem_start;
 
+    enc_handle = NULL;
     enc_handle = esp_encrypted_img_decrypt_start(&enc_cfg);
     if(enc_handle == NULL)
     {
@@ -86,17 +89,18 @@ esp_err_t start_ota_ws(void)
         abort_ota_ws();
         return ESP_FAIL;
     }
+    memset(&enc_arg,0,sizeof(pre_enc_decrypt_arg_t));
     ESP_LOGI(TAG, "esp_ota_begin succeeded");
     return ESP_OK;
 }
 esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
 {
      //return ESP_OK; // debug return
-     pre_enc_decrypt_arg_t enc_arg;
     enc_arg.data_in = (char*)enc_ota_write_data;
     enc_arg.data_in_len = enc_data_read;
     esp_err_t ret = esp_encrypted_img_decrypt_data(enc_handle, &enc_arg);
-    if(ret)
+    ESP_LOGI("OTA ENC  ","ret=%x len=%d",ret,enc_arg.data_out_len);
+    if(ret == ESP_FAIL || ret == ESP_ERR_INVALID_ARG)
     {
             ESP_LOGE(TAG, "data decrypt err %x",ret);
             abort_ota_ws();
@@ -124,16 +128,18 @@ esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
         }
     }
     ret = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
+    tst_c += data_read;
+    ESP_LOGI("OTA WRITE","ret=%x len=%d tst_c=%d",ret,data_read,tst_c);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "esp_ota_write err");
         abort_ota_ws();
         goto _ret_free;
     }
-    ret = ESP_OK;
+    return  ESP_OK;
 
 _ret_free:
-    free(enc_arg.data_out);
+    //free(enc_arg.data_out);
     return ret;
 }
 esp_err_t end_ota_ws(void)
