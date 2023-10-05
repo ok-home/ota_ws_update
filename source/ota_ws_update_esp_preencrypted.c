@@ -29,11 +29,11 @@ static const char *TAG = "ota_ws_esp";
 
 static const esp_partition_t *update_partition = NULL;
 static bool image_header_was_checked = false;
-static esp_ota_handle_t update_handle = 0;
+static esp_ota_handle_t update_handle = NULL;
 // pre-encrypted handle
-static esp_decrypt_handle_t enc_handle; // handle
-static esp_decrypt_cfg_t enc_cfg = {}; // cfg
-static  pre_enc_decrypt_arg_t enc_arg = {}; // arg
+static esp_decrypt_handle_t enc_handle = NULL; // handle
+static esp_decrypt_cfg_t enc_cfg = {0}; // cfg
+static  pre_enc_decrypt_arg_t enc_arg = {0}; // arg
 
 static int tst_c=0;
 
@@ -81,15 +81,14 @@ esp_err_t start_ota_ws(void)
     enc_cfg.rsa_priv_key = rsa_private_pem_start;
     enc_cfg.rsa_priv_key_len = rsa_private_pem_end-rsa_private_pem_start;
 
-    enc_handle = NULL;
     enc_handle = esp_encrypted_img_decrypt_start(&enc_cfg);
     if(enc_handle == NULL)
     {
-        ESP_LOGE(TAG, "eesp_encrypted_img_decrypt_start failed ");
+        ESP_LOGE(TAG, "esp_encrypted_img_decrypt_start failed ");
         abort_ota_ws();
         return ESP_FAIL;
     }
-    memset(&enc_arg,0,sizeof(pre_enc_decrypt_arg_t));
+    memset(&enc_arg,0,sizeof(pre_enc_decrypt_arg_t)); //??
     ESP_LOGI(TAG, "esp_ota_begin succeeded");
     return ESP_OK;
 }
@@ -123,8 +122,7 @@ esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
         {
             ESP_LOGE(TAG, "Received package is not fit len");
             abort_ota_ws();
-            ret = ESP_FAIL;
-            goto _ret_free;
+            return ESP_FAIL;
         }
     }
     ret = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
@@ -134,13 +132,9 @@ esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
     {
         ESP_LOGE(TAG, "esp_ota_write err");
         abort_ota_ws();
-        goto _ret_free;
+        return ret;
     }
     return  ESP_OK;
-
-_ret_free:
-    //free(enc_arg.data_out);
-    return ret;
 }
 esp_err_t end_ota_ws(void)
 {
@@ -169,17 +163,21 @@ esp_err_t end_ota_ws(void)
         abort_ota_ws();
         return ret;
     }
+    if(enc_arg.data_out)
+        { free(enc_arg.data_out);}
     return  ESP_OK;
 }
 esp_err_t abort_ota_ws(void)
 {
-    esp_err_t ret = esp_encrypted_img_decrypt_abort(enc_handle);
-    if(ret)
-    {
-        esp_ota_abort(update_handle);
-        return ret;
-    }
-    return esp_ota_abort(update_handle);
+    if(enc_handle)
+        {esp_encrypted_img_decrypt_abort(enc_handle);}
+    if(update_handle)
+        {esp_ota_abort(update_handle);}
+    enc_handle = NULL;
+    update_handle = NULL;
+    if(enc_arg.data_out)
+        { free(enc_arg.data_out);}
+    return ESP_OK;
 }
 // false - rollback disable
 // true - rollback enable
