@@ -24,26 +24,27 @@ openssl genrsa -out rsa_key/private.pem 3072
 
 #include "ota_ws_update_private.h"
 
-static const char *TAG = "ota_ws_esp";
+static const char *TAG = "ota_ws_esp_pre_enc";
 
-static const esp_partition_t *update_partition = NULL;
-static bool image_header_was_checked = false;
-static esp_ota_handle_t update_handle = 0;
+static const esp_partition_t *update_partition = NULL;  
+static bool image_header_was_checked = false;   
+static esp_ota_handle_t update_handle = 0;  // ota handle
 // pre-encrypted handle
-static esp_decrypt_handle_t enc_handle = NULL; // handle
-static esp_decrypt_cfg_t enc_cfg = {0};        // cfg
-static pre_enc_decrypt_arg_t enc_arg = {0};    // arg
+static esp_decrypt_handle_t enc_handle = NULL; // enc handle context
+static esp_decrypt_cfg_t enc_cfg = {0};        // enc cfg
+static pre_enc_decrypt_arg_t enc_arg = {0};    // enc arg
 
-// static int tst_c=0;
+// private key
+// may be generate cmd
+// openssl genrsa -out rsa_key/private.pem 3072
+// size - 3072 !!
+// null terminated - use EMBED_TXTFILES in cmake.txt
 
 extern const char rsa_private_pem_start[] asm("_binary_private_pem_start");
 extern const char rsa_private_pem_end[] asm("_binary_private_pem_end");
 
 esp_err_t start_ota_ws(void)
 {
-    // return ESP_OK; // debug return
-    // tst_c=0;
-
     esp_err_t err;
     ESP_LOGI(TAG, "Starting OTA");
 
@@ -75,7 +76,7 @@ esp_err_t start_ota_ws(void)
         return ESP_FAIL;
     }
 
-    image_header_was_checked = false;
+    image_header_was_checked = false; // first read on  write_ota_ws - check image header
 
     enc_cfg.rsa_priv_key = rsa_private_pem_start;
     enc_cfg.rsa_priv_key_len = rsa_private_pem_end - rsa_private_pem_start;
@@ -87,27 +88,27 @@ esp_err_t start_ota_ws(void)
         abort_ota_ws();
         return ESP_FAIL;
     }
-    memset(&enc_arg, 0, sizeof(pre_enc_decrypt_arg_t)); //??
+    memset(&enc_arg, 0, sizeof(pre_enc_decrypt_arg_t)); //asp_encrypted -> use realloc inside -> enc_arg.data_out may be NULL on first start
     ESP_LOGI(TAG, "esp_ota_begin succeeded");
     return ESP_OK;
 }
 esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
 {
-    // return ESP_OK; // debug return
     enc_arg.data_in = (char *)enc_ota_write_data;
     enc_arg.data_in_len = enc_data_read;
-    esp_err_t ret = esp_encrypted_img_decrypt_data(enc_handle, &enc_arg);
-    // ESP_LOGI("OTA ENC  ","ret=%x len=%d",ret,enc_arg.data_out_len);
+    // read enc img, enc_arg.data_out/enc_arg.data_out_len -> decrypted data/len
+    // dont clear enc_arg.data_out/enc_arg.data_out_len, its used realloc on esp_encrypted_img_decrypt_data
+    esp_err_t ret = esp_encrypted_img_decrypt_data(enc_handle, &enc_arg); 
     if (ret == ESP_FAIL || ret == ESP_ERR_INVALID_ARG)
     {
-        ESP_LOGE(TAG, "data decrypt err %x", ret);
+        ESP_LOGE(TAG, "Data decrypt error %x", ret);
         abort_ota_ws();
         return ret;
     }
     int data_read = enc_arg.data_out_len;
     uint8_t *ota_write_data = (uint8_t *)enc_arg.data_out;
 
-    if (image_header_was_checked == false) // first segment
+    if (image_header_was_checked == false) // first segment - check img header
     {
         esp_app_desc_t new_app_info;
         if (data_read > sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t))
@@ -125,8 +126,6 @@ esp_err_t write_ota_ws(int enc_data_read, uint8_t *enc_ota_write_data)
         }
     }
     ret = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
-    // tst_c += data_read;
-    // ESP_LOGI("OTA WRITE","ret=%x len=%d tst_c=%d",ret,data_read,tst_c);
     if (ret != ESP_OK)
     {
         ESP_LOGE(TAG, "esp_ota_write err");
@@ -168,7 +167,7 @@ esp_err_t end_ota_ws(void)
     if (enc_arg.data_out)
     {
         free(enc_arg.data_out);
-    }
+            }
     return ESP_OK;
 }
 esp_err_t abort_ota_ws(void)
