@@ -52,12 +52,14 @@ idf_component_register(
 if(CONFIG_OTA_PRE_ENCRYPTED_MODE)
 
     include(esp_encrypted_img/project_include.cmake)
+    #redefine ESP_IMG_GEN_TOOL_PATH
+    set(ESP_IMG_GEN_TOOL_PATH ${CMAKE_CURRENT_LIST_DIR}/esp_encrypted_img/tools/esp_enc_img_gen.py)
 
     #openssl genrsa -out rsa_key/private.pem 3072
 
     # for rsa_key on components dir  
-    #create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
-    #  ${COMPONENT_DIR}/rsa_key/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
+    create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
+      ${COMPONENT_DIR}/rsa_key/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
 
     # for rsa_key on project dir  
     #create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
