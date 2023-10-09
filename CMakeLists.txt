@@ -24,7 +24,11 @@ set( embed_txt_file
 
 if(CONFIG_OTA_PRE_ENCRYPTED_MODE)
   list(APPEND srcs 
-      source/ota_ws_update_esp_preencrypted.c 
+      source/ota_ws_update_esp_preencrypted.c
+      esp_encrypted_img/src/esp_encrypted_img.c
+  )
+  list(APPEND priv_includedir
+      esp_encrypted_img/include
   )
   list(APPEND embed_txt_file 
       rsa_key/private.pem
@@ -46,11 +50,14 @@ idf_component_register(
 )
 
 if(CONFIG_OTA_PRE_ENCRYPTED_MODE)
+
+    include(esp_encrypted_img/project_include.cmake)
+
     #openssl genrsa -out rsa_key/private.pem 3072
 
     # for rsa_key on components dir  
-    create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
-      ${COMPONENT_DIR}/rsa_key/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
+    #create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
+    #  ${COMPONENT_DIR}/rsa_key/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
 
     # for rsa_key on project dir  
     #create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
