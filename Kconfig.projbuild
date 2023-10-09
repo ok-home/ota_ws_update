@@ -1,4 +1,4 @@
-menu "OTA WS UPDATE"
+menu "OTA websocket update"
 
     config OTA_DEFAULT_URI
         string "OTA page URI"
@@ -23,5 +23,21 @@ menu "OTA WS UPDATE"
         default n
         help
             Ota pre-encrypted mode.
+
+    choice  OTA_PRE_ENCRYPTED_RSA_KEY_LOCATION
+        depends on OTA_PRE_ENCRYPTED_MODE
+        prompt "RSA key directory"
+        default OTA_PRE_ENCRYPTED_RSA_KEY_ON_PROJECT_LOCATION
+            config OTA_PRE_ENCRYPTED_RSA_KEY_ON_PROJECT_LOCATION
+                bool "PROJECT_DIR"
+            config OTA_PRE_ENCRYPTED_RSA_KEY_ON_COMPONENT_LOCATION
+                bool "COMPONENT_DIR"
+    endchoice
+
+    config OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY
+        depends on OTA_PRE_ENCRYPTED_MODE
+        string  "Ota pre-encrypted RSA key directory"
+        default "rsa_key"
+
 
 endmenu

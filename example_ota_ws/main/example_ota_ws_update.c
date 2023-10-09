@@ -9,13 +9,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-#include "esp_event.h"
+//#include "esp_event.h"
 #include "esp_log.h"
-#include "esp_ota_ops.h"
-#include "esp_wifi.h"
+//#include "esp_wifi.h"
 #include "esp_http_server.h"
-
-// #include <esp_log.h>
 
 #include "nvs_wifi_connect.h"
 #include "ota_ws_update.h"
