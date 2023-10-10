@@ -27,7 +27,7 @@ menu "OTA websocket update"
     choice  OTA_PRE_ENCRYPTED_RSA_KEY_LOCATION
         depends on OTA_PRE_ENCRYPTED_MODE
         prompt "RSA key directory"
-        default OTA_PRE_ENCRYPTED_RSA_KEY_ON_PROJECT_LOCATION
+        default OTA_PRE_ENCRYPTED_RSA_KEY_ON_COMPONENT_LOCATION
             config OTA_PRE_ENCRYPTED_RSA_KEY_ON_PROJECT_LOCATION
                 bool "PROJECT_DIR"
             config OTA_PRE_ENCRYPTED_RSA_KEY_ON_COMPONENT_LOCATION

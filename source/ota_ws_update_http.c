@@ -8,15 +8,8 @@
 #include "ota_ws_update_private.h"
 #include "ota_ws_update.h"
 
-#include "freertos/task.h"
-#include "freertos/queue.h"
-
 #include "jsmn.h"
-/*
-#define OTA_DEFAULT_WS_URI "/ws"
-#define OTA_DEFAULT_URI "/"
-#define OTA_CHUNK_SIZE 4096*2
-*/
+
 #define OTA_DEFAULT_WS_URI CONFIG_OTA_DEFAULT_WS_URI
 #define OTA_DEFAULT_URI CONFIG_OTA_DEFAULT_URI
 #define OTA_CHUNK_SIZE (CONFIG_OTA_CHUNK_SIZE & ~0xf)

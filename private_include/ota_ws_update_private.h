@@ -1,7 +1,6 @@
 #pragma once
 
 #include <esp_log.h>
-#include <esp_system.h>
 #include "esp_http_server.h"
 
 #define OTA_RESTART_ESP "otaRestartEsp"
