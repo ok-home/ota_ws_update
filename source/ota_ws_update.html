@@ -125,7 +125,7 @@
             };
         }
     </script>
-    <script>/*WIFI обновление*/
+    <script>
         document.getElementById("otaStartCancel").addEventListener("click", function (e) {
             if (otaData.length > 0 && otaStarted == 0) {
 
@@ -151,25 +151,6 @@
             socket.send(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
         });
 
-        /*  // debug -> test sample        
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
-        async function tstReceive() {
-            receiveWsData(JSON.stringify({ name: "otaSetChunkSize", value: 1024 }));
-            while (otaStartsegment + otaSetChunkSize <= otaData.length && otaStarted == 1) {
-                await sleep(1000);
-                if (otaStarted == 1) {
-                    receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
-                }
-                otaStartsegment += otaSetChunkSize;
-            }
-            if (otaStarted == 1) {
-                receiveWsData(JSON.stringify({ name: "otaGetChunk", value: otaStartsegment }));
-                receiveWsData(JSON.stringify({ name: "otaEnd", value: "OK" }));
-            }
-        }
-        */
         function receiveWsData(data) {
             try {
                 let obj = JSON.parse(data);
