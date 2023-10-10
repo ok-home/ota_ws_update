@@ -30,11 +30,11 @@ if(CONFIG_OTA_PRE_ENCRYPTED_MODE)
   )
   if(CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_ON_COMPONENT_LOCATION)
     list(APPEND embed_txt_file 
-        ${COMPONENT_DIR}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private.pem
+        ${COMPONENT_DIR}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private_rsa_3072.pem
     )
    else()
     list(APPEND embed_txt_file 
-        ${project_dir}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private.pem
+        ${project_dir}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private_rsa_3072.pem
     )
    endif() 
 else()
@@ -59,15 +59,16 @@ if(CONFIG_OTA_PRE_ENCRYPTED_MODE)
     #redefine ESP_IMG_GEN_TOOL_PATH
     set(ESP_IMG_GEN_TOOL_PATH ${CMAKE_CURRENT_LIST_DIR}/esp_encrypted_img/tools/esp_enc_img_gen.py)
 
-    #openssl genrsa -out rsa_key/private.pem 3072
+    # command for generate RSA key
+    #openssl genrsa -out rsa_key/private_rsa_3072.pem 3072
    
     if(CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_ON_COMPONENT_LOCATION)
     # for rsa_key on components project_dir
     create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
-      ${COMPONENT_DIR}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
+      ${COMPONENT_DIR}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private_rsa_3072.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
     else()  
     # for rsa_key on project dir  
     create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
-      ${project_dir}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
+      ${project_dir}/${CONFIG_OTA_PRE_ENCRYPTED_RSA_KEY_DIRECTORY}/private_rsa_3072.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
     endif()  
 endif()

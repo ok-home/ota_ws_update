@@ -6,16 +6,6 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-/* cmake cmd
-
-create_esp_enc_img(${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}.bin
-    ${project_dir}/rsa_key/private.pem ${CMAKE_BINARY_DIR}/${CMAKE_PROJECT_NAME}_secure.bin app)
-
-key cmd
-openssl genrsa -out rsa_key/private.pem 3072
-
-*/
-
 #include "esp_ota_ops.h"
 #include "esp_flash_partitions.h"
 #include "esp_partition.h"
@@ -36,12 +26,12 @@ static pre_enc_decrypt_arg_t enc_arg = {0};    // enc arg
 
 // private key
 // may be generate cmd
-// openssl genrsa -out rsa_key/private.pem 3072
+// openssl genrsa -out rsa_key/private_rsa_3072.pem 3072
 // size - 3072 !!
 // null terminated - use EMBED_TXTFILES in cmake.txt
 
-extern const char rsa_private_pem_start[] asm("_binary_private_pem_start");
-extern const char rsa_private_pem_end[] asm("_binary_private_pem_end");
+extern const char rsa_private_pem_start[] asm("_binary_private_rsa_3072_pem_start");
+extern const char rsa_private_pem_end[] asm("_binary_private_rsa_3072_pem_end");
 
 esp_err_t start_ota_ws(void)
 {
