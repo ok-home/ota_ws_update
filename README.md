@@ -4,7 +4,7 @@
 | ESP32 ESP32S3 ESP32C3 | 
 | ----------------- |
 
-# ESP32 OTA update via WebsSocket with a simple WEB interface. Optional PreEncrypted mode.
+# ESP32 OTA update via WebSocket with a simple WEB interface. Optional PreEncrypted mode.
   - Connects as a component to your program
   - Does not require external servers for storing OTA firmware, designed primarily for working on a local network.
   - Uses WebsSocket or WebsSocket Secure protocol.
