@@ -9,9 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_system.h"
-//#include "esp_event.h"
 #include "esp_log.h"
-//#include "esp_wifi.h"
 #include "esp_http_server.h"
 
 #include "nvs_wifi_connect.h"
@@ -57,5 +55,4 @@ void app_main(void)
 #endif // MDNS
 
     example_echo_ws_server();
-    //prv_start_http_server(PRV_MODE_STAY_ACTIVE, ota_ws_register_uri_handler); // run server
 }
