@@ -4,8 +4,31 @@
     <title>OTA UPDATE - Обновление прошивки</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Встроенные иконки Font Awesome */
+        .fa {
+            display: inline-block;
+            font-style: normal;
+            font-variant: normal;
+            text-rendering: auto;
+            line-height: 1;
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+        }
+        
+        .fa-sync-alt:before { content: "\f2f1"; }
+        .fa-exclamation-triangle:before { content: "\f071"; }
+        .fa-file-upload:before { content: "\f574"; }
+        .fa-folder-open:before { content: "\f07c"; }
+        .fa-file-code:before { content: "\f1c9"; }
+        .fa-play-circle:before { content: "\f144"; }
+        .fa-times-circle:before { content: "\f057"; }
+        .fa-check-circle:before { content: "\f058"; }
+        .fa-undo:before { content: "\f2ea"; }
+        .fa-power-off:before { content: "\f011"; }
+        .fa-home:before { content: "\f015"; }
+        
+        /* Основные стили */
         :root {
             --primary: #4361ee;
             --primary-dark: #3a56d4;
@@ -258,7 +281,7 @@
             gap: 10px;
         }
 
-        .file-info i {
+        .file-info .fa {
             color: var(--primary);
         }
 
@@ -304,7 +327,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="fas fa-sync-alt"></i> OTA UPDATE</h1>
+            <h1><i class="fa fa-sync-alt"></i> OTA UPDATE</h1>
             <p>Обновление прошивки устройства по воздуху</p>
         </div>
 
@@ -314,31 +337,31 @@
         </div>
 
         <div id="rollback" class="card hidden">
-            <h2 class="section-title"><i class="fas fa-exclamation-triangle"></i> Подтверждение обновления</h2>
+            <h2 class="section-title"><i class="fa fa-exclamation-triangle"></i> Подтверждение обновления</h2>
             <div class="status-card status-warning">
                 <p>Обновление было загружено, но не подтверждено. Пожалуйста, подтвердите установку новой прошивки или откатитесь к предыдущей версии.</p>
             </div>
             
             <button class="btn btn-success" id="otaVerifyApp">
-                <i class="fas fa-check-circle"></i> Подтвердить и установить обновление
+                <i class="fa fa-check-circle"></i> Подтвердить и установить обновление
             </button>
             
             <button class="btn btn-danger" id="otaRollback">
-                <i class="fas fa-undo"></i> Отменить обновление и откатиться
+                <i class="fa fa-undo"></i> Отменить обновление и откатиться
             </button>
         </div>
 
         <div id="update" class="card">
-            <h2 class="section-title"><i class="fas fa-file-upload"></i> Загрузка прошивки</h2>
+            <h2 class="section-title"><i class="fa fa-file-upload"></i> Загрузка прошивки</h2>
             
             <input type="file" id="otaFile" class="hidden" accept=".bin" onchange="readOtaFile(this)">
             
             <button class="btn btn-primary" id="otaFileSelect" onclick="document.getElementById('otaFile').click()">
-                <i class="fas fa-folder-open"></i> Выбрать файл прошивки
+                <i class="fa fa-folder-open"></i> Выбрать файл прошивки
             </button>
             
             <div id="fileInfo" class="file-info hidden">
-                <i class="fas fa-file-code"></i>
+                <i class="fa fa-file-code"></i>
                 <span id="fileName">Файл не выбран</span>
             </div>
 
@@ -356,17 +379,17 @@
 
             <div class="btn-container">
                 <button class="btn btn-warning" id="otaStartCancel">
-                    <i class="fas fa-play-circle"></i> Начать обновление
+                    <i class="fa fa-play-circle"></i> Начать обновление
                 </button>
                 
                 <button class="btn btn-success hidden" id="otaReStart">
-                    <i class="fas fa-power-off"></i> Перезагрузить с новой прошивкой
+                    <i class="fa fa-power-off"></i> Перезагрузить с новой прошивкой
                 </button>
             </div>
         </div>
 
         <button class="btn btn-secondary" id="goHome">
-            <i class="fas fa-home"></i> Вернуться на главную
+            <i class="fa fa-home"></i> Вернуться на главную
         </button>
     </div>
 
@@ -389,7 +412,7 @@
             // Показываем информацию о файле
             document.getElementById('fileInfo').classList.remove('hidden');
             document.getElementById('fileName').textContent = `${file.name} (${formatFileSize(file.size)})`;
-            document.getElementById('otaFileSelect').innerHTML = `<i class="fas fa-check-circle"></i> Файл выбран: ${file.name}`;
+            document.getElementById('otaFileSelect').innerHTML = `<i class="fa fa-check-circle"></i> Файл выбран: ${file.name}`;
             
             reader.readAsArrayBuffer(file);
             input.value = null;
@@ -432,14 +455,14 @@
             if (otaData && otaData.length > 0 && otaStarted == 0) {
                 socket.send(JSON.stringify({ name: "otaSize", value: otaData.length }));
                 otaStarted = 1;
-                this.innerHTML = "<i class='fas fa-times-circle'></i> Отменить загрузку";
+                this.innerHTML = "<i class='fa fa-times-circle'></i> Отменить загрузку";
                 document.getElementById("otaFileSelect").disabled = true;
                 document.getElementById("otaProgressVisible").classList.remove("hidden");
                 updateProgress(0, otaData.length);
             } else {
                 otaStarted = 0;
                 socket.send(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
-                this.innerHTML = "<i class='fas fa-play-circle'></i> Начать обновление";
+                this.innerHTML = "<i class='fa fa-play-circle'></i> Начать обновление";
                 document.getElementById("otaFileSelect").disabled = false;
             }
         });
@@ -476,18 +499,18 @@
                     case "otaGetChunk":
                         let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
                         updateProgress(obj.value, otaData.length);
-                        document.getElementById("otaStartCancel").innerHTML = `<i class='fas fa-times-circle'></i> Загрузка: ${formatFileSize(obj.value)} из ${formatFileSize(otaData.length)}`;
+                        document.getElementById("otaStartCancel").innerHTML = `<i class='fa fa-times-circle'></i> Загрузка: ${formatFileSize(obj.value)} из ${formatFileSize(otaData.length)}`;
                         socket.send(otaDataSend);
                         break;
                     case "otaEnd":
                         otaStartsegment = 0;
                         otaStarted = 0;
                         document.getElementById("otaStartCancel").classList.add("hidden");
-                        document.getElementById("otaStartCancel").innerHTML = "<i class='fas fa-play-circle'></i> Начать обновление";
+                        document.getElementById("otaStartCancel").innerHTML = "<i class='fa fa-play-circle'></i> Начать обновление";
                         updateProgress(otaData.length, otaData.length);
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStart").classList.remove("hidden");
-                        document.getElementById("otaReStart").innerHTML = "<i class='fas fa-power-off'></i> Прошивка загружена. Перезагрузить устройство";
+                        document.getElementById("otaReStart").innerHTML = "<i class='fa fa-power-off'></i> Прошивка загружена. Перезагрузить устройство";
                         document.getElementById("otaReStart").disabled = false;
                         showStatus("Прошивка успешно загружена", "success");
                         break;
@@ -496,7 +519,7 @@
                         otaStartsegment = 0;
                         otaStarted = 0;
                         document.getElementById("otaStartCancel").classList.remove("hidden");
-                        document.getElementById("otaStartCancel").innerHTML = "<i class='fas fa-play-circle'></i> Начать обновление";
+                        document.getElementById("otaStartCancel").innerHTML = "<i class='fa fa-play-circle'></i> Начать обновление";
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStart").classList.remove("hidden");
                         document.getElementById("otaReStart").innerHTML = "Загрузка отменена: " + obj.value;
