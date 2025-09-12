@@ -5,28 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
     <style>
-        /* Встроенные иконки Font Awesome */
-        .fa {
+        /* Стили для SVG иконок */
+        .icon {
             display: inline-block;
-            font-style: normal;
-            font-variant: normal;
-            text-rendering: auto;
-            line-height: 1;
-            font-family: "Font Awesome 5 Free";
-            font-weight: 900;
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+            margin-right: 8px;
         }
-        
-        .fa-sync-alt:before { content: "\f2f1"; }
-        .fa-exclamation-triangle:before { content: "\f071"; }
-        .fa-file-upload:before { content: "\f574"; }
-        .fa-folder-open:before { content: "\f07c"; }
-        .fa-file-code:before { content: "\f1c9"; }
-        .fa-play-circle:before { content: "\f144"; }
-        .fa-times-circle:before { content: "\f057"; }
-        .fa-check-circle:before { content: "\f058"; }
-        .fa-undo:before { content: "\f2ea"; }
-        .fa-power-off:before { content: "\f011"; }
-        .fa-home:before { content: "\f015"; }
         
         /* Основные стили */
         :root {
@@ -281,10 +267,6 @@
             gap: 10px;
         }
 
-        .file-info .fa {
-            color: var(--primary);
-        }
-
         .section-title {
             font-size: 18px;
             margin-bottom: 15px;
@@ -325,9 +307,67 @@
 </head>
 
 <body>
+    <!-- SVG иконки -->
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <!-- Иконка синхронизации -->
+        <symbol id="sync-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6c0 1.01-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6c0-1.01.25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4l-4-4v3z"/>
+        </symbol>
+        
+        <!-- Иконка предупреждения -->
+        <symbol id="warning-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+        </symbol>
+        
+        <!-- Иконка загрузки файла -->
+        <symbol id="upload-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
+        </symbol>
+        
+        <!-- Иконка папки -->
+        <symbol id="folder-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V6h5.17l2 2H20v10z"/>
+        </symbol>
+        
+        <!-- Иконка файла кода -->
+        <symbol id="file-code-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M13 9h5.5L13 3.5V9M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2zm4.5 12.5l-1.77-1.77L10.23 12 8.73 10.5l1.77-1.77L12 10.23l1.5-1.5 1.77 1.77L13.77 12l1.5 1.5-1.77 1.77L12 13.77l-1.5 1.5z"/>
+        </symbol>
+        
+        <!-- Иконка воспроизведения -->
+        <symbol id="play-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M8 5v14l11-7z"/>
+        </symbol>
+        
+        <!-- Иконка отмены -->
+        <symbol id="cancel-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/>
+        </symbol>
+        
+        <!-- Иконка подтверждения -->
+        <symbol id="check-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+        </symbol>
+        
+        <!-- Иконка отката -->
+        <symbol id="undo-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
+        </symbol>
+        
+        <!-- Иконка питания -->
+        <symbol id="power-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M13 3h-2v10h2V3zm4.83 2.17l-1.42 1.42C17.99 7.86 19 9.81 19 12c0 3.87-3.13 7-7 7s-7-3.13-7-7c0-2.19 1.01-4.14 2.58-5.42L6.17 5.17C4.23 6.82 3 9.26 3 12c0 4.97 4.03 9 9 9s9-4.03 9-9c0-2.74-1.23-5.18-3.17-6.83z"/>
+        </symbol>
+        
+        <!-- Иконка дома -->
+        <symbol id="home-icon" viewBox="0 0 24 24">
+            <path fill="currentColor" d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </symbol>
+    </svg>
+
     <div class="container">
         <div class="header">
-            <h1><i class="fa fa-sync-alt"></i> OTA UPDATE</h1>
+            <h1><svg class="icon" style="width: 24px; height: 24px;"><use href="#sync-icon"></use></svg> OTA UPDATE</h1>
             <p>Обновление прошивки устройства по воздуху</p>
         </div>
 
@@ -337,31 +377,31 @@
         </div>
 
         <div id="rollback" class="card hidden">
-            <h2 class="section-title"><i class="fa fa-exclamation-triangle"></i> Подтверждение обновления</h2>
+            <h2 class="section-title"><svg class="icon"><use href="#warning-icon"></use></svg> Подтверждение обновления</h2>
             <div class="status-card status-warning">
                 <p>Обновление было загружено, но не подтверждено. Пожалуйста, подтвердите установку новой прошивки или откатитесь к предыдущей версии.</p>
             </div>
             
             <button class="btn btn-success" id="otaVerifyApp">
-                <i class="fa fa-check-circle"></i> Подтвердить и установить обновление
+                <svg class="icon"><use href="#check-icon"></use></svg> Подтвердить и установить обновление
             </button>
             
             <button class="btn btn-danger" id="otaRollback">
-                <i class="fa fa-undo"></i> Отменить обновление и откатиться
+                <svg class="icon"><use href="#undo-icon"></use></svg> Отменить обновление и откатиться
             </button>
         </div>
 
         <div id="update" class="card">
-            <h2 class="section-title"><i class="fa fa-file-upload"></i> Загрузка прошивки</h2>
+            <h2 class="section-title"><svg class="icon"><use href="#upload-icon"></use></svg> Загрузка прошивки</h2>
             
             <input type="file" id="otaFile" class="hidden" accept=".bin" onchange="readOtaFile(this)">
             
             <button class="btn btn-primary" id="otaFileSelect" onclick="document.getElementById('otaFile').click()">
-                <i class="fa fa-folder-open"></i> Выбрать файл прошивки
+                <svg class="icon"><use href="#folder-icon"></use></svg> Выбрать файл прошивки
             </button>
             
             <div id="fileInfo" class="file-info hidden">
-                <i class="fa fa-file-code"></i>
+                <svg class="icon"><use href="#file-code-icon"></use></svg>
                 <span id="fileName">Файл не выбран</span>
             </div>
 
@@ -379,17 +419,17 @@
 
             <div class="btn-container">
                 <button class="btn btn-warning" id="otaStartCancel">
-                    <i class="fa fa-play-circle"></i> Начать обновление
+                    <svg class="icon"><use href="#play-icon"></use></svg> Начать обновление
                 </button>
                 
                 <button class="btn btn-success hidden" id="otaReStart">
-                    <i class="fa fa-power-off"></i> Перезагрузить с новой прошивкой
+                    <svg class="icon"><use href="#power-icon"></use></svg> Перезагрузить с новой прошивкой
                 </button>
             </div>
         </div>
 
         <button class="btn btn-secondary" id="goHome">
-            <i class="fa fa-home"></i> Вернуться на главную
+            <svg class="icon"><use href="#home-icon"></use></svg> Вернуться на главную
         </button>
     </div>
 
@@ -412,7 +452,7 @@
             // Показываем информацию о файле
             document.getElementById('fileInfo').classList.remove('hidden');
             document.getElementById('fileName').textContent = `${file.name} (${formatFileSize(file.size)})`;
-            document.getElementById('otaFileSelect').innerHTML = `<i class="fa fa-check-circle"></i> Файл выбран: ${file.name}`;
+            document.getElementById('otaFileSelect').innerHTML = `<svg class="icon"><use href="#check-icon"></use></svg> Файл выбран: ${file.name}`;
             
             reader.readAsArrayBuffer(file);
             input.value = null;
@@ -455,14 +495,14 @@
             if (otaData && otaData.length > 0 && otaStarted == 0) {
                 socket.send(JSON.stringify({ name: "otaSize", value: otaData.length }));
                 otaStarted = 1;
-                this.innerHTML = "<i class='fa fa-times-circle'></i> Отменить загрузку";
+                this.innerHTML = "<svg class='icon'><use href='#cancel-icon'></use></svg> Отменить загрузку";
                 document.getElementById("otaFileSelect").disabled = true;
                 document.getElementById("otaProgressVisible").classList.remove("hidden");
                 updateProgress(0, otaData.length);
             } else {
                 otaStarted = 0;
                 socket.send(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
-                this.innerHTML = "<i class='fa fa-play-circle'></i> Начать обновление";
+                this.innerHTML = "<svg class='icon'><use href='#play-icon'></use></svg> Начать обновление";
                 document.getElementById("otaFileSelect").disabled = false;
             }
         });
@@ -499,18 +539,18 @@
                     case "otaGetChunk":
                         let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
                         updateProgress(obj.value, otaData.length);
-                        document.getElementById("otaStartCancel").innerHTML = `<i class='fa fa-times-circle'></i> Загрузка: ${formatFileSize(obj.value)} из ${formatFileSize(otaData.length)}`;
+                        document.getElementById("otaStartCancel").innerHTML = `<svg class='icon'><use href='#cancel-icon'></use></svg> Загрузка: ${formatFileSize(obj.value)} из ${formatFileSize(otaData.length)}`;
                         socket.send(otaDataSend);
                         break;
                     case "otaEnd":
                         otaStartsegment = 0;
                         otaStarted = 0;
                         document.getElementById("otaStartCancel").classList.add("hidden");
-                        document.getElementById("otaStartCancel").innerHTML = "<i class='fa fa-play-circle'></i> Начать обновление";
+                        document.getElementById("otaStartCancel").innerHTML = "<svg class='icon'><use href='#play-icon'></use></svg> Начать обновление";
                         updateProgress(otaData.length, otaData.length);
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStart").classList.remove("hidden");
-                        document.getElementById("otaReStart").innerHTML = "<i class='fa fa-power-off'></i> Прошивка загружена. Перезагрузить устройство";
+                        document.getElementById("otaReStart").innerHTML = "<svg class='icon'><use href='#power-icon'></use></svg> Прошивка загружена. Перезагрузить устройство";
                         document.getElementById("otaReStart").disabled = false;
                         showStatus("Прошивка успешно загружена", "success");
                         break;
@@ -519,7 +559,7 @@
                         otaStartsegment = 0;
                         otaStarted = 0;
                         document.getElementById("otaStartCancel").classList.remove("hidden");
-                        document.getElementById("otaStartCancel").innerHTML = "<i class='fa fa-play-circle'></i> Начать обновление";
+                        document.getElementById("otaStartCancel").innerHTML = "<svg class='icon'><use href='#play-icon'></use></svg> Начать обновление";
                         document.getElementById("otaFileSelect").disabled = false;
                         document.getElementById("otaReStart").classList.remove("hidden");
                         document.getElementById("otaReStart").innerHTML = "Загрузка отменена: " + obj.value;
