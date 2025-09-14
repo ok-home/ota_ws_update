@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+    <title>OTA UPDATE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <style>
+        .column {
+            float: left;
+            width: 100%;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .btn {
+            float: left;
+            width: 100%;
+            margin: 2px;
+
+        }
+
+        .cl1 {
+            float: left;
+            width: 100%;
+            margin: 2px;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .cl01 {
+            float: left;
+            width: 100%;
+            text-align: center;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .cl02 {
+            float: left;
+            width: 100%;
+            text-align: center;
+            margin-top: 2px;
+            margin-bottom: 2px;
+        }
+
+        .hdr {
+            float: left;
+            width: 100%;
+            text-align: center;
+            color: white;
+            background-color: blue;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .logstr {
+            width: 100%;
+            float: left;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="hdr">OTA UPDATE</div>
+
+    <div class="column">
+        <button class="btn" id="goHome">Home Page</button>
+    </div>
+    <div id="rollback" style="display:none">
+        <div class="column">
+            <button class="btn" id="otaVerifyApp">Click to confirm and commit OTA update</button>
+        </div>
+        <div class="column">
+            <button class="btn" id="otaRollback">Cancel OTA. Click to rollback update and restart</button>
+        </div>
+    </div>
+    <div id="update" style="display:block">
+        <div class="cl1" style="display:none">
+            <label class="cl01" for="otaFile">Select the new OTA firmware file</label>
+            <input class="cl02" type="file" id="otaFile" placeholder="select file" onchange="readOtaFile(this)">
+        </div>
+        <div class="column" style="display:block" id="otaFileSelectVisible">
+            <button class="btn" id="otaFileSelect" onclick="document.getElementById('otaFile').click()">File
+                Select</button>
+        </div>
+
+        <div class="column" style="display:none" id="otaStartVisible">
+            <button class="btn" id="otaStartCancel">Start OTA update</button>
+        </div>
+        <div class="column" style="display:none" id="otaReStartVisible">
+            <button class="btn" id="otaReStart">Reboot with new OTA firmware</button>
+        </div>
+        <div id="otaProgressVisible" style="display:none">
+            <div class="cl1">
+                <progress class="cl02" id="otaPogress" max=100 value=0>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        let otaData;
+        let otaSetChunkSize = 0;
+        let otaStartsegment = 0;
+        let otaStarted = 0;
+
+        function readOtaFile(input) {
+            let reader = new FileReader();
+            let file = input.files[0];
+            document.getElementById('otaFileSelect').innerHTML = "Selected firmware file: " + file.name;
+            reader.readAsArrayBuffer(file);
+            input.value = null;
+
+            reader.onload = function () {
+                otaData = new Uint8Array(reader.result);
+                document.getElementById("otaStartVisible").style.display = "block";
+                document.getElementById("otaProgressVisible").style.display = "none";
+                document.getElementById("otaReStartVisible").style.display = "none";
+            };
+
+            reader.onerror = function () {
+                console.log(reader.error);
+            };
+        }
+    </script>
+    <script>
+        document.getElementById("otaStartCancel").addEventListener("click", function (e) {
+            if (otaData.length > 0 && otaStarted == 0) {
+
+                socket.send(JSON.stringify({ name: "otaSize", value: otaData.length }));
+                otaStarted = 1;
+                this.innerHTML = "Click to Cancel";
+                document.getElementById("otaFileSelect").disabled = true;
+                document.getElementById("otaProgressVisible").style.display = "block";
+                document.getElementById("otaPogress").max = otaData.length;
+            }
+            else {
+                otaStarted = 0;
+                socket.send(JSON.stringify({ name: "otaCancel", value: "Cancel" }));
+            }
+
+        });
+        document.getElementById("goHome").addEventListener("click", function (e) {
+            //onclick="window.location.href = '/'"
+            socket.close();
+            window.location.href = '/';
+        });
+        document.getElementById("otaReStart").addEventListener("click", function (e) {
+            socket.send(JSON.stringify({ name: "otaRestartEsp", value: "restart" }));
+        });
+
+        function receiveWsData(data) {
+            try {
+                let obj = JSON.parse(data);
+                switch (obj.name) {
+                    case "otaSetChunkSize":
+                        otaSetChunkSize = obj.value;
+                        break;
+                    case "otaGetChunk":
+                        let otaDataSend = otaData.subarray(obj.value, obj.value + otaSetChunkSize);
+                        document.getElementById("otaPogress").value = obj.value;
+                        document.getElementById("otaStartCancel").innerHTML = "Ota download. Size = " + otaData.length + " Segment = " + obj.value + " Click to Cancel";
+                        socket.send(otaDataSend);
+                        break;
+                    case "otaEnd":
+                        otaStartsegment = 0;
+                        otaStarted = 0;
+                        document.getElementById("otaStartVisible").style.display = "none";
+                        document.getElementById("otaStartCancel").innerHTML = "Start OTA update";
+                        document.getElementById("otaPogress").value = otaData.length;
+                        document.getElementById("otaFileSelect").disabled = false;
+                        document.getElementById("otaReStartVisible").style.display = "block";
+                        document.getElementById("otaReStart").innerHTML = "The firmware is loaded. Click to reboot with new OTA firmware";
+                        document.getElementById("otaReStart").disabled = false;
+                        break;
+                    case "otaError":
+                    case "otaCancel":
+                        otaStartsegment = 0;
+                        otaStarted = 0;
+                        document.getElementById("otaStartVisible").style.display = "none";
+                        document.getElementById("otaStartCancel").innerHTML = "Start OTA update";
+                        document.getElementById("otaPogress").value = otaData.length;
+                        document.getElementById("otaFileSelect").disabled = false;
+                        document.getElementById("otaReStartVisible").style.display = "block";
+                        document.getElementById("otaReStart").innerHTML = "ОТА firmware download canceled " + obj.value;
+                        document.getElementById("otaReStart").disabled = true;
+                        break;
+                    case "otaCheckRollback":
+                        document.getElementById("rollback").style.display = "block";
+                        document.getElementById("update").style.display = "none";
+                        break;
+                }
+            }
+            catch
+            {
+                console.log(data + "Error msg");
+            }
+        };
+    </script>
+
+    <script>  // rollback
+        document.getElementById("otaVerifyApp").addEventListener("click", function (e) {
+            socket.send(JSON.stringify({ name: "otaProcessRollback", value: "false" }));
+            document.getElementById("rollback").style.display = "none";
+            document.getElementById("update").style.display = "block";
+        });
+
+        document.getElementById("otaRollback").addEventListener("click", function (e) {
+            socket.send(JSON.stringify({ name: "otaProcessRollback", value: "true" }));
+            document.getElementById("rollback").style.display = "none";
+            document.getElementById("update").style.display = "block";
+        });
+
+    </script>
+
+    <script> // основной старт скрипта, открыть сокет
+        // создать сокет по адресу
+        let protocol = "ws:"
+        if(document.location.protocol == "https:") protocol = "wss:"
+        let wsHostStr = protocol + "//" + document.location.host + document.location.pathname;
+        wsHostStr += (document.location.pathname == '/') ? "ws" : "/ws";
+        var socket = new WebSocket(wsHostStr);
+        socket.binaryType = "arraybuffer";
+    </script>
+
+    <script> // события WS
+        socket.onopen = function () {
+            console.log("connect ws");
+        };
+        socket.onclose = function (event) {
+            console.log("close ws - reload");
+            setTimeout(() => document.location.reload(), 2000);
+        };
+        socket.onerror = function () {
+            console.log("error ws");
+            setTimeout(() => document.location.reload(), 2000);
+        };
+        socket.onmessage = function (event) {
+            receiveWsData(event.data);
+        };
+    </script>
+
+</body>
+
+</html>

@@ -19,3 +19,4 @@ example_ota_ws/managed_components/espressif__esp_encrypted_img/test/test.c
 example_ota_ws/managed_components/espressif__esp_encrypted_img/test/certs/test_rsa_private_key.pem
 example_ota_ws/managed_components/espressif__esp_encrypted_img/tools/esp_enc_img_gen.py
 example_ota_ws/dependencies.lock
+example_ota_ws/.clangd
